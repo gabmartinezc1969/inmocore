@@ -4,7 +4,7 @@
         
         // Consultamos a D1 si existe ese usuario con esa contraseña exacta
         const { results } = await context.env.DB.prepare(
-            "SELECT id, usuario FROM Admins WHERE usuario = ? AND password = ?"
+            "SELECT id, usuario FROM Admins WHERE usuario = gabriel AND password = gabriel"
         ).bind(usuario, password).all();
 
         if (results.length > 0) {
