@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>MiCRM · Clientes y Leads</title>
+<meta name="theme-color" content="#5B2A9D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MiCRM">
+<link rel="manifest" href="manifest-micrm.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" defer></script>
@@ -74,7 +82,35 @@ main{padding:14px 14px 90px;}
 .chip.perdida{background:var(--red);}
 .chip.tarea{background:var(--green);}
 .chip.reunion{background:var(--pink);}
+.chip.nuevo{background:var(--muted);}
+.chip.contactado{background:var(--blue);}
+.chip.cita{background:var(--pink);}
+.chip.negociacion{background:var(--amber);}
+.chip.cerrado{background:var(--green);}
+.chip.perdido{background:var(--red);}
 .chip-outline{border:1.5px solid var(--border); color:var(--muted); background:transparent;}
+.icon-btn.badge{position:relative;}
+.icon-btn .count-badge{position:absolute; top:-3px; right:-3px; background:var(--pink); color:#fff; font-size:9.5px; font-weight:800; min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px;}
+.stage-track{display:flex; align-items:center; gap:6px; overflow-x:auto; padding-bottom:2px;}
+.stage-track .st-btn{flex-shrink:0; padding:6px 12px; border-radius:20px; font-size:11.5px; font-weight:700; color:#fff; opacity:.55;}
+.stage-track .st-btn.done{opacity:1;}
+.stage-track .st-btn.current{opacity:1; box-shadow:0 0 0 2px #fff inset;}
+.property-row,.advisor-row{display:flex; align-items:center; gap:12px; background:var(--card); border-radius:var(--radius); padding:11px 12px; margin-bottom:10px; box-shadow:var(--shadow);}
+.property-row .p-icon{width:44px;height:44px;border-radius:13px; background:var(--bg); color:var(--primary1); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.property-row .p-main{flex:1; min-width:0;}
+.property-row .p-name{font-weight:700; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.property-row .p-sub{font-size:11.5px; color:var(--muted); margin-top:2px;}
+.status-badge.status-disponible{background:var(--green);}
+.status-badge.status-apartada{background:var(--amber);}
+.status-badge.status-vendida,.status-badge.status-rentada{background:var(--blue);}
+.followup-row{display:flex; align-items:center; gap:10px; background:var(--card); border-radius:14px; padding:10px 12px; margin-bottom:9px; box-shadow:var(--shadow);}
+.followup-row .fu-badge{font-size:10px; font-weight:800; padding:3px 8px; border-radius:20px; color:#fff; flex-shrink:0;}
+.followup-row .fu-badge.overdue{background:var(--red);}
+.followup-row .fu-badge.today{background:var(--amber);}
+.funnel-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; margin-bottom:14px;}
+.funnel-card{flex-shrink:0; min-width:84px; background:var(--card); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow); text-align:center;}
+.funnel-card .num{font-size:18px; font-weight:800;}
+.funnel-card .lbl{font-size:10px; color:var(--muted); margin-top:2px; font-weight:700;}
 
 #bottom-nav{
   position:fixed; bottom:0; left:0; right:0; max-width:520px; margin:0 auto; height:var(--nav-h);
@@ -299,11 +335,34 @@ const ICO = {
   route:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M6 16.5V13a4 4 0 0 1 4-4h4a4 4 0 0 0 4-4"/></svg>',
   sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
   lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  filter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M7 12h10M10 19h4"/></svg>',
+  building:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/><circle cx="17.5" cy="9" r="2.8"/><path d="M15.8 13.8c2.7.4 4.7 2.7 4.7 5.5"/></svg>',
+  forward:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>',
 };
 
 /* ===================== STATE / STORAGE ===================== */
 const LS = {contacts:'micrm_contacts', notes:'micrm_notes', voicenotes:'micrm_voicenotes', events:'micrm_events',
-  invoices:'micrm_invoices', fields:'micrm_fields', groups:'micrm_groups', documents:'micrm_documents', settings:'micrm_settings'};
+  invoices:'micrm_invoices', fields:'micrm_fields', groups:'micrm_groups', documents:'micrm_documents', settings:'micrm_settings',
+  properties:'micrm_properties', advisors:'micrm_advisors'};
+
+/* ===================== PIPELINE (seguimiento hasta el cierre) ===================== */
+const STAGES = [
+  {key:'nuevo', label:'Nuevo', color:'#79708f'},
+  {key:'contactado', label:'Contactado', color:'#3d8bff'},
+  {key:'cita', label:'Cita agendada', color:'#E255A1'},
+  {key:'negociacion', label:'Negociación', color:'#f5a524'},
+  {key:'cerrado', label:'Cerrado', color:'#1fb978'},
+  {key:'perdido', label:'Perdido', color:'#e5484d'},
+];
+function stageInfo(key){ return STAGES.find(s=>s.key===key) || STAGES[0]; }
+function stageLabel(key){ return stageInfo(key).label; }
+function categoryFromStage(stage){ if(stage==='cerrado') return 'cliente'; if(stage==='perdido') return 'perdida'; return 'lead'; }
+function nextStageKey(stage){ const i = STAGES.findIndex(s=>s.key===stage); return (i>=0 && i<STAGES.length-2) ? STAGES[i+1].key : stage; }
+
+const PROPERTY_TYPES = ['Departamento','Casa','Terreno','Edificio','Local','Oficina','Otro'];
+const PROPERTY_TRANSACTIONS = ['Venta','Renta'];
+const PROPERTY_STATUSES = ['Disponible','Apartada','Vendida','Rentada'];
 
 function loadLS(key, fallback){ try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
 function saveLS(key, val){ localStorage.setItem(key, JSON.stringify(val)); scheduleBackupWrite(); }
@@ -325,10 +384,12 @@ const state = {
   groups: loadLS(LS.groups, []),
   documents: loadLS(LS.documents, []),
   settings: Object.assign({}, DEFAULT_SETTINGS, loadLS(LS.settings, {})),
+  properties: loadLS(LS.properties, []),
+  advisors: loadLS(LS.advisors, []),
 };
 
 function persist(key){
-  const map = {contacts:'contacts', notes:'notes', voicenotes:'voicenotes', events:'events', invoices:'invoices', fields:'fields', groups:'groups', documents:'documents', settings:'settings'};
+  const map = {contacts:'contacts', notes:'notes', voicenotes:'voicenotes', events:'events', invoices:'invoices', fields:'fields', groups:'groups', documents:'documents', settings:'settings', properties:'properties', advisors:'advisors'};
   saveLS(LS[key], state[map[key]]);
 }
 
@@ -336,28 +397,51 @@ function persist(key){
 function seedIfEmpty(){
   if(state.contacts.length) return;
   const AVATAR_COLORS = ['#5B2A9D','#E255A1','#1fb978','#3d8bff','#f5a524','#e5484d'];
+
+  state.advisors = [
+    {id:uid(), name:'Karla', color:'#5B2A9D', active:true, createdAt:nowIso()},
+    {id:uid(), name:'Elsie', color:'#E255A1', active:true, createdAt:nowIso()},
+    {id:uid(), name:'Heyra', color:'#1fb978', active:true, createdAt:nowIso()},
+    {id:uid(), name:'Norma', color:'#3d8bff', active:true, createdAt:nowIso()},
+  ];
+  persist('advisors');
+
+  state.properties = [
+    {id:uid(), name:'Lago Meru', type:'Departamento', transaction:'Venta', address:'Lago Meru, Miguel Hidalgo, CDMX', price:4800000, status:'Disponible', createdAt:nowIso()},
+    {id:uid(), name:'Marina Park', type:'Departamento', transaction:'Renta', address:'Marina Park, Cuauhtémoc, CDMX', price:22000, status:'Disponible', createdAt:nowIso()},
+    {id:uid(), name:'Dr. Vértiz 909-203', type:'Departamento', transaction:'Venta', address:'Dr. Vértiz 909-203, Narvarte, CDMX', price:3950000, status:'Apartada', createdAt:nowIso()},
+    {id:uid(), name:'Escuadrón 201', type:'Casa', transaction:'Venta', address:'Escuadrón 201, Iztacalco, CDMX', price:6200000, status:'Disponible', createdAt:nowIso()},
+    {id:uid(), name:'Santa Cruz Atoyac', type:'Terreno', transaction:'Venta', address:'Santa Cruz Atoyac, Benito Juárez, CDMX', price:9500000, status:'Disponible', createdAt:nowIso()},
+    {id:uid(), name:'Muyuguarda', type:'Edificio', transaction:'Renta', address:'Muyuguarda, Xochimilco, CDMX', price:65000, status:'Vendida', createdAt:nowIso()},
+  ];
+  persist('properties');
+
   const seedContacts = [
-    {name:'María Fernanda López', cargo:'Directora de Compras', category:'cliente', addr:'Av. Reforma 222, Cuauhtémoc, CDMX', lat:19.4270, lng:-99.1677, phone:'+52 55 1234 5678', email:'mflopez@ejemplo.mx'},
-    {name:'Carlos Alberto Ramírez', cargo:'Gerente de Operaciones', category:'lead', addr:'Av. Insurgentes Sur 1602, Benito Juárez, CDMX', lat:19.3812, lng:-99.1780, phone:'+52 55 2345 6789', email:'caramirez@ejemplo.mx'},
-    {name:'Ana Sofía Torres', cargo:'CEO', category:'cliente', addr:'Paseo de la Reforma 505, Cuauhtémoc, CDMX', lat:19.4285, lng:-99.1690, phone:'+52 55 3456 7890', email:'astorres@ejemplo.mx'},
-    {name:'Jorge Iván Mendoza', cargo:'Freelancer', category:'perdida', addr:'Calz. de Tlalpan 1000, Coyoacán, CDMX', lat:19.3467, lng:-99.1590, phone:'+52 55 4567 8901', email:'jmendoza@ejemplo.mx'},
-    {name:'Daniela Guadalupe Ruiz', cargo:'Arquitecta', category:'lead', addr:'Av. Santa Fe 428, Álvaro Obregón, CDMX', lat:19.3592, lng:-99.2707, phone:'+52 55 5678 9012', email:'druiz@ejemplo.mx'},
-    {name:'Roberto Carlos Vázquez', cargo:'Director Comercial', category:'cliente', addr:'Av. Universidad 1000, Coyoacán, CDMX', lat:19.3300, lng:-99.1830, phone:'+52 55 6789 0123', email:'rvazquez@ejemplo.mx'},
+    {name:'María Fernanda López', cargo:'Directora de Compras', stage:'cerrado', addr:'Av. Reforma 222, Cuauhtémoc, CDMX', lat:19.4270, lng:-99.1677, phone:'+52 55 1234 5678', email:'mflopez@ejemplo.mx', propIdx:0, advIdx:0},
+    {name:'Carlos Alberto Ramírez', cargo:'Gerente de Operaciones', stage:'negociacion', addr:'Av. Insurgentes Sur 1602, Benito Juárez, CDMX', lat:19.3812, lng:-99.1780, phone:'+52 55 2345 6789', email:'caramirez@ejemplo.mx', propIdx:2, advIdx:1},
+    {name:'Ana Sofía Torres', cargo:'CEO', stage:'cerrado', addr:'Paseo de la Reforma 505, Cuauhtémoc, CDMX', lat:19.4285, lng:-99.1690, phone:'+52 55 3456 7890', email:'astorres@ejemplo.mx', propIdx:3, advIdx:0},
+    {name:'Jorge Iván Mendoza', cargo:'Freelancer', stage:'perdido', addr:'Calz. de Tlalpan 1000, Coyoacán, CDMX', lat:19.3467, lng:-99.1590, phone:'+52 55 4567 8901', email:'jmendoza@ejemplo.mx', propIdx:4, advIdx:2},
+    {name:'Daniela Guadalupe Ruiz', cargo:'Arquitecta', stage:'cita', addr:'Av. Santa Fe 428, Álvaro Obregón, CDMX', lat:19.3592, lng:-99.2707, phone:'+52 55 5678 9012', email:'druiz@ejemplo.mx', propIdx:1, advIdx:3},
+    {name:'Roberto Carlos Vázquez', cargo:'Director Comercial', stage:'contactado', addr:'Av. Universidad 1000, Coyoacán, CDMX', lat:19.3300, lng:-99.1830, phone:'+52 55 6789 0123', email:'rvazquez@ejemplo.mx', propIdx:5, advIdx:1},
   ];
   state.groups = [
     {id:uid(), name:'Interesado', color:'#1fb978'},
     {id:uid(), name:'Contactado', color:'#3d8bff'},
     {id:uid(), name:'No interesado', color:'#e5484d'},
   ];
+  const today = new Date();
+  function inDays(n){ const d = new Date(today); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
   state.contacts = seedContacts.map((c,i)=>({
-    id:uid(), name:c.name, cargo:c.cargo, category:c.category, avatarColor:AVATAR_COLORS[i%AVATAR_COLORS.length],
+    id:uid(), name:c.name, cargo:c.cargo, category:categoryFromStage(c.stage), stage:c.stage, avatarColor:AVATAR_COLORS[i%AVATAR_COLORS.length],
     phones:[{id:uid(), label:'Móvil', number:c.phone}], emails:[{id:uid(), label:'Trabajo', email:c.email}],
-    website:'', address:c.addr, lat:c.lat, lng:c.lng, groups:[state.groups[i%3].id], customFields:{}, createdAt:nowIso()
+    website:'', address:c.addr, lat:c.lat, lng:c.lng, groups:[state.groups[i%3].id], customFields:{},
+    propertyId: state.properties[c.propIdx].id, advisorId: state.advisors[c.advIdx].id,
+    nextFollowUp: (c.stage==='cerrado' || c.stage==='perdido') ? null : inDays(i-2),
+    createdAt:nowIso()
   }));
   persist('contacts'); persist('groups');
 
   const c0=state.contacts[0].id, c1=state.contacts[1].id, c2=state.contacts[2].id;
-  const today = new Date();
   function atDate(offsetDays, h,m){ const d=new Date(today); d.setDate(d.getDate()+offsetDays); d.setHours(h,m,0,0); return d.toISOString(); }
   state.events = [
     {id:uid(), contactId:c0, type:'reunion', title:'Presentación de propuesta', date:atDate(0,11,0), reminder:true, completed:false, createdAt:nowIso()},
@@ -414,6 +498,40 @@ function initials(name){ return (name||'').trim().split(/\s+/).slice(0,2).map(w=
 function escapeHtml(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function findContact(id){ return state.contacts.find(c=>c.id===id); }
 function contactName(id){ const c=findContact(id); return c ? c.name : 'Sin contacto'; }
+function findProperty(id){ return state.properties.find(p=>p.id===id); }
+function propertyLabel(id){ const p=findProperty(id); return p ? p.name : ''; }
+function findAdvisor(id){ return state.advisors.find(a=>a.id===id); }
+function advisorLabel(id){ const a=findAdvisor(id); return a ? a.name : ''; }
+
+/* ===================== PROPERTIES CATALOG ===================== */
+function addProperty(payload){
+  const p = Object.assign({id:uid(), createdAt:nowIso()}, payload);
+  state.properties.push(p); persist('properties'); return p;
+}
+function updateProperty(id, payload){
+  const p = findProperty(id); if(!p) return;
+  Object.assign(p, payload); persist('properties');
+}
+function deleteProperty(id){
+  state.properties = state.properties.filter(p=>p.id!==id);
+  state.contacts.forEach(c=>{ if(c.propertyId===id) c.propertyId = null; });
+  persist('properties'); persist('contacts');
+}
+
+/* ===================== ADVISORS CATALOG ===================== */
+function addAdvisor(payload){
+  const a = Object.assign({id:uid(), active:true, createdAt:nowIso()}, payload);
+  state.advisors.push(a); persist('advisors'); return a;
+}
+function updateAdvisor(id, payload){
+  const a = findAdvisor(id); if(!a) return;
+  Object.assign(a, payload); persist('advisors');
+}
+function deleteAdvisor(id){
+  state.advisors = state.advisors.filter(a=>a.id!==id);
+  state.contacts.forEach(c=>{ if(c.advisorId===id) c.advisorId = null; });
+  persist('advisors'); persist('contacts');
+}
 
 /* ===================== INVOICE MATH ===================== */
 function computeInvoiceTotals(items, ivaRate){
@@ -449,9 +567,10 @@ function nearestNeighborRoute(points){
 /* ===================== EXPORT / IMPORT ===================== */
 function exportAllData(){
   return {
-    version:1, exportedAt: nowIso(),
+    version:2, exportedAt: nowIso(),
     contacts: state.contacts, notes: state.notes, voicenotes: state.voicenotes, events: state.events,
     invoices: state.invoices, fields: state.fields, groups: state.groups, documents: state.documents,
+    properties: state.properties, advisors: state.advisors,
     settings: state.settings
   };
 }
@@ -465,8 +584,16 @@ function importAllData(obj){
   state.fields = Array.isArray(obj.fields) ? obj.fields : [];
   state.groups = Array.isArray(obj.groups) ? obj.groups : [];
   state.documents = Array.isArray(obj.documents) ? obj.documents : [];
+  state.properties = Array.isArray(obj.properties) ? obj.properties : [];
+  state.advisors = Array.isArray(obj.advisors) ? obj.advisors : [];
   state.settings = Object.assign({}, DEFAULT_SETTINGS, obj.settings || {});
-  ['contacts','notes','voicenotes','events','invoices','fields','groups','documents','settings'].forEach(persist);
+  state.contacts.forEach(c=>{
+    if(c.stage === undefined) c.stage = categoryFromStage ? (c.category==='cliente'?'cerrado':c.category==='perdida'?'perdido':'nuevo') : 'nuevo';
+    if(c.advisorId === undefined) c.advisorId = null;
+    if(c.propertyId === undefined) c.propertyId = null;
+    if(c.nextFollowUp === undefined) c.nextFollowUp = null;
+  });
+  ['contacts','notes','voicenotes','events','invoices','fields','groups','documents','properties','advisors','settings'].forEach(persist);
 }
 function downloadFile(filename, content, mime){
   const blob = new Blob([content], {type: mime || 'application/octet-stream'});
@@ -483,9 +610,9 @@ function toCSV(rows){
   }).join(',')).join('\r\n');
 }
 function exportContactsCSV(){
-  const rows = [['Nombre','Cargo','Categoría','Teléfono','Email','Dirección']];
+  const rows = [['Nombre','Cargo','Etapa','Teléfono','Email','Dirección','Propiedad','Asesora','Próximo seguimiento']];
   state.contacts.forEach(c=>{
-    rows.push([c.name, c.cargo||'', c.category, (c.phones[0]||{}).number||'', (c.emails[0]||{}).email||'', c.address||'']);
+    rows.push([c.name, c.cargo||'', stageLabel(c.stage||'nuevo'), (c.phones[0]||{}).number||'', (c.emails[0]||{}).email||'', c.address||'', propertyLabel(c.propertyId), advisorLabel(c.advisorId), c.nextFollowUp||'']);
   });
   downloadFile('contactos_micrm.csv', toCSV(rows), 'text/csv');
 }
@@ -595,7 +722,7 @@ function applyTheme(){
 
 /* ===================== ROUTER ===================== */
 let currentView = 'contacts';
-const VIEWS = ['contacts','agenda','map','invoices','more','dashboard','documents','fields','settings'];
+const VIEWS = ['contacts','agenda','map','invoices','more','dashboard','documents','fields','settings','properties','advisors'];
 function go(view){
   currentView = view;
   document.querySelectorAll('#bottom-nav button').forEach(b=> b.classList.toggle('active', b.dataset.view === view));
@@ -612,27 +739,62 @@ document.getElementById('bottom-nav').addEventListener('click', (e)=>{
 function renderHeader(){
   const hd = document.getElementById('app-header');
   const titles = {contacts:'Contactos', agenda:'Agenda', map:'Mapa y rutas', invoices:'Facturas', more:'Más',
-    dashboard:'Dashboard', documents:'Documentos', fields:'Campos y grupos', settings:'Ajustes'};
+    dashboard:'Dashboard', documents:'Documentos', fields:'Campos y grupos', settings:'Ajustes',
+    properties:'Propiedades', advisors:'Asesoras'};
   let extra = '';
+  const activeFilters = [uiState.advisorFilter, uiState.propertyFilter, uiState.groupFilter].filter(Boolean).length;
   if(currentView === 'contacts'){
-    extra = `<div class="header-search">${ICO.search}<input id="contact-search" placeholder="Buscar contacto..." value="${escapeHtml(uiState.contactSearch)}"></div>
-      <div class="chips-row" id="group-filter-row"></div>`;
+    extra = `<div class="header-search" style="display:flex; gap:8px; align-items:center;">
+        <div style="flex:1; position:relative;">${ICO.search}<input id="contact-search" placeholder="Buscar contacto..." value="${escapeHtml(uiState.contactSearch)}"></div>
+        <button class="icon-btn ghost" id="btn-open-filters" style="position:relative;">${ICO.filter}${activeFilters?`<span class="count-badge">${activeFilters}</span>`:''}</button>
+      </div>
+      <div class="chips-row" id="stage-filter-row"></div>`;
   }
   hd.innerHTML = `<div class="hd-row"><div><h1>${titles[currentView]||'MiCRM'}</h1><div class="sub">${escapeHtml(state.settings.businessName)}</div></div>
     <button class="icon-btn" id="btn-lock-now" title="Bloquear">${ICO.lock}</button></div>${extra}`;
   document.getElementById('btn-lock-now').addEventListener('click', ()=>{ if(state.settings.pinHash) showLockScreen(); else toast('No has configurado un PIN'); });
   if(currentView === 'contacts'){
     document.getElementById('contact-search').addEventListener('input', (e)=>{ uiState.contactSearch = e.target.value; renderContactsList(); });
-    renderGroupFilterRow();
+    document.getElementById('btn-open-filters').addEventListener('click', openContactFiltersSheet);
+    renderStageFilterRow();
   }
 }
-function renderGroupFilterRow(){
-  const row = document.getElementById('group-filter-row');
+function renderStageFilterRow(){
+  const row = document.getElementById('stage-filter-row');
   if(!row) return;
-  let html = `<button class="f-chip ${!uiState.groupFilter?'active':''}" data-g="">Todos</button>`;
-  state.groups.forEach(g=> html += `<button class="f-chip ${uiState.groupFilter===g.id?'active':''}" data-g="${g.id}">${escapeHtml(g.name)}</button>`);
+  let html = `<button class="f-chip ${!uiState.stageFilter?'active':''}" data-s="">Todos</button>`;
+  STAGES.forEach(s=> html += `<button class="f-chip ${uiState.stageFilter===s.key?'active':''}" data-s="${s.key}">${escapeHtml(s.label)}</button>`);
   row.innerHTML = html;
-  row.querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>{ uiState.groupFilter = b.dataset.g || null; renderHeader(); renderContactsList(); }));
+  row.querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>{ uiState.stageFilter = b.dataset.s || null; renderStageFilterRow(); renderContactsList(); }));
+}
+function openContactFiltersSheet(){
+  const html = `<div class="sheet-handle"></div>
+  <div class="sheet-header"><button class="icon-btn ghost" id="sheet-close">${ICO.close}</button><h2>Filtrar contactos</h2></div>
+  <div class="sheet-body">
+    <label>Asesora</label>
+    <select id="flt-advisor"><option value="">Todas</option>${state.advisors.map(a=>`<option value="${a.id}" ${uiState.advisorFilter===a.id?'selected':''}>${escapeHtml(a.name)}</option>`).join('')}</select>
+    <label>Propiedad</label>
+    <select id="flt-property"><option value="">Todas</option>${state.properties.map(p=>`<option value="${p.id}" ${uiState.propertyFilter===p.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}</select>
+    <label>Grupo</label>
+    <select id="flt-group"><option value="">Todos</option>${state.groups.map(g=>`<option value="${g.id}" ${uiState.groupFilter===g.id?'selected':''}>${escapeHtml(g.name)}</option>`).join('')}</select>
+    <div style="display:flex; gap:8px; margin-top:16px;">
+      <button type="button" class="btn btn-outline" style="flex:1;" id="flt-clear">Limpiar</button>
+      <button type="button" class="btn btn-primary" style="flex:1;" id="flt-apply">Aplicar</button>
+    </div>
+  </div>`;
+  openSheet(html, (root)=>{
+    root.querySelector('#sheet-close').addEventListener('click', closeSheet);
+    root.querySelector('#flt-clear').addEventListener('click', ()=>{
+      uiState.advisorFilter = null; uiState.propertyFilter = null; uiState.groupFilter = null;
+      closeSheet(); renderHeader(); renderContactsList();
+    });
+    root.querySelector('#flt-apply').addEventListener('click', ()=>{
+      uiState.advisorFilter = root.querySelector('#flt-advisor').value || null;
+      uiState.propertyFilter = root.querySelector('#flt-property').value || null;
+      uiState.groupFilter = root.querySelector('#flt-group').value || null;
+      closeSheet(); renderHeader(); renderContactsList();
+    });
+  });
 }
 
 const FAB_CONFIG = {
@@ -641,6 +803,8 @@ const FAB_CONFIG = {
   invoices:{icon:ICO.plus, action:()=>openInvoiceEditor()},
   documents:{icon:ICO.upload, action:()=>document.getElementById('doc-file-input').click()},
   fields:{icon:ICO.plus, action:()=>openFieldForm()},
+  properties:{icon:ICO.plus, action:()=>openPropertyForm()},
+  advisors:{icon:ICO.plus, action:()=>openAdvisorForm()},
 };
 function renderFab(){
   const fab = document.getElementById('fab-main');
@@ -652,25 +816,30 @@ function renderFab(){
 }
 
 /* ===================== UI STATE ===================== */
-const uiState = {contactSearch:'', groupFilter:null, agendaDate: new Date(), contactDetailId:null, contactDetailTab:'contacto',
-  routeSelection:[], docSearch:'', currentAudio:null };
+const uiState = {contactSearch:'', groupFilter:null, stageFilter:null, advisorFilter:null, propertyFilter:null,
+  agendaDate: new Date(), contactDetailId:null, contactDetailTab:'contacto',
+  routeSelection:[], docSearch:'', propertySearch:'', currentAudio:null };
 
 /* ===================== VIEW: CONTACTS ===================== */
-function categoryLabel(cat){ return {cliente:'Cliente', lead:'Lead', perdida:'Oport. perdida'}[cat] || cat; }
 function filteredContacts(){
   let list = state.contacts.slice();
   if(uiState.groupFilter) list = list.filter(c => (c.groups||[]).includes(uiState.groupFilter));
+  if(uiState.stageFilter) list = list.filter(c => (c.stage||'nuevo') === uiState.stageFilter);
+  if(uiState.advisorFilter) list = list.filter(c => c.advisorId === uiState.advisorFilter);
+  if(uiState.propertyFilter) list = list.filter(c => c.propertyId === uiState.propertyFilter);
   const q = uiState.contactSearch.trim().toLowerCase();
-  if(q) list = list.filter(c => c.name.toLowerCase().includes(q) || (c.cargo||'').toLowerCase().includes(q));
+  if(q) list = list.filter(c => c.name.toLowerCase().includes(q) || (c.cargo||'').toLowerCase().includes(q) || propertyLabel(c.propertyId).toLowerCase().includes(q));
   return list.sort((a,b)=> a.name.localeCompare(b.name, 'es'));
 }
 function contactRowHtml(c){
   const phone = (c.phones && c.phones[0]) ? c.phones[0].number : '';
+  const sub = [propertyLabel(c.propertyId), advisorLabel(c.advisorId)].filter(Boolean).join(' · ') || c.cargo || phone || '';
+  const st = stageInfo(c.stage||'nuevo');
   return `<div class="contact-row" data-id="${c.id}">
     <div class="avatar" style="background:${c.avatarColor}">${initials(c.name)}</div>
     <div class="contact-main">
-      <div class="cname">${escapeHtml(c.name)} <span class="chip ${c.category}">${categoryLabel(c.category)}</span></div>
-      <div class="csub">${escapeHtml(c.cargo||phone||'')}</div>
+      <div class="cname">${escapeHtml(c.name)} <span class="chip ${st.key}">${escapeHtml(st.label)}</span></div>
+      <div class="csub">${escapeHtml(sub)}</div>
     </div>
   </div>`;
 }
@@ -717,12 +886,18 @@ function openContactForm(contactId){
       <input name="name" required value="${escapeHtml(c?c.name:'')}">
       <label>Cargo / Profesión</label>
       <input name="cargo" value="${escapeHtml(c?c.cargo:'')}">
-      <label>Categoría</label>
-      <select name="category">
-        <option value="lead" ${c&&c.category==='lead'?'selected':''}>Lead</option>
-        <option value="cliente" ${c&&c.category==='cliente'?'selected':''}>Cliente</option>
-        <option value="perdida" ${c&&c.category==='perdida'?'selected':''}>Oportunidad perdida</option>
-      </select>
+      <label>Etapa del seguimiento</label>
+      <select name="stage">${STAGES.map(s=>`<option value="${s.key}" ${(c?c.stage:'nuevo')===s.key?'selected':''}>${escapeHtml(s.label)}</option>`).join('')}</select>
+
+      <label>Asesora asignada</label>
+      <select name="advisorId"><option value="">Sin asignar</option>${state.advisors.map(a=>`<option value="${a.id}" ${c&&c.advisorId===a.id?'selected':''}>${escapeHtml(a.name)}</option>`).join('')}</select>
+
+      <label>Propiedad de interés</label>
+      <select name="propertyId"><option value="">Sin propiedad</option>${state.properties.map(p=>`<option value="${p.id}" ${c&&c.propertyId===p.id?'selected':''}>${escapeHtml(p.name)} (${escapeHtml(p.type)} · ${escapeHtml(p.transaction)})</option>`).join('')}</select>
+      <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">¿No está en la lista? Créala en Más → Propiedades.</div>
+
+      <label>Próximo seguimiento</label>
+      <input type="date" name="nextFollowUp" value="${c&&c.nextFollowUp?c.nextFollowUp.slice(0,10):''}">
 
       <label>Teléfonos</label>
       <div id="phones-wrap">${phones.map(p=>phoneRowHtml(p)).join('')}</div>
@@ -823,8 +998,11 @@ function submitContactForm(form, contactId){
   form.querySelectorAll('[data-custom-field]').forEach(inp=> customFields[inp.dataset.customField] = inp.value);
   const groups = [...form.querySelectorAll('#group-checks input:checked')].map(i=>i.value);
   const latVal = form.querySelector('#lat-input').value, lngVal = form.querySelector('#lng-input').value;
+  const stage = fd.get('stage') || 'nuevo';
+  const nextFollowUp = fd.get('nextFollowUp') || null;
   const payload = {
-    name: fd.get('name').trim(), cargo: fd.get('cargo').trim(), category: fd.get('category'),
+    name: fd.get('name').trim(), cargo: fd.get('cargo').trim(), stage, category: categoryFromStage(stage),
+    advisorId: fd.get('advisorId') || null, propertyId: fd.get('propertyId') || null, nextFollowUp,
     phones, emails, website: fd.get('website').trim(), address: fd.get('address').trim(),
     lat: latVal ? parseFloat(latVal) : null, lng: lngVal ? parseFloat(lngVal) : null,
     customFields, groups
@@ -878,8 +1056,20 @@ function renderContactDetail(){
       <div>
         <div style="font-weight:800; font-size:16.5px;">${escapeHtml(c.name)}</div>
         <div style="color:var(--muted); font-size:12.5px;">${escapeHtml(c.cargo||'')}</div>
-        <span class="chip ${c.category}" style="margin-top:6px; display:inline-block;">${categoryLabel(c.category)}</span>
       </div>
+    </div>
+    <div class="card">
+      <h3>Seguimiento hasta el cierre</h3>
+      <div class="stage-track" id="cd-stage-track"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+        <div style="font-size:12.5px; color:var(--muted);">Próximo seguimiento</div>
+        <input type="date" id="cd-nextfollowup" value="${c.nextFollowUp?c.nextFollowUp.slice(0,10):''}" style="width:auto;">
+      </div>
+      ${(c.stage!=='cerrado' && c.stage!=='perdido') ? `<button class="btn btn-primary btn-block" id="cd-advance-stage" style="margin-top:10px;">${ICO.forward} Avanzar a "${escapeHtml(stageInfo(nextStageKey(c.stage)).label)}"</button>` : ''}
+      <div style="display:flex; gap:16px; margin-top:12px; font-size:12.5px; color:var(--muted);">
+        <div>Asesora: <b style="color:var(--text);">${escapeHtml(advisorLabel(c.advisorId)||'Sin asignar')}</b></div>
+      </div>
+      ${c.propertyId ? `<div id="cd-property-link" style="margin-top:8px; cursor:pointer;"><span class="chip" style="background:var(--primary1);">${escapeHtml(propertyLabel(c.propertyId))}</span></div>` : ''}
     </div>
     <div class="row-actions">
       <div class="qa" data-qa="reunion"><div class="circ">${ICO.cal}</div>Reunión</div>
@@ -900,7 +1090,35 @@ function renderContactDetail(){
   root.querySelector('#cd-edit').addEventListener('click', ()=>openContactForm(c.id));
   root.querySelectorAll('#cd-tabs button').forEach(b=> b.addEventListener('click', ()=>{ uiState.contactDetailTab = b.dataset.tab; renderContactDetail(); }));
   root.querySelectorAll('.qa').forEach(qa=> qa.addEventListener('click', ()=>handleQuickAction(qa.dataset.qa, c)));
+  renderStageTrack(root, c);
+  root.querySelector('#cd-nextfollowup').addEventListener('change', (e)=>{
+    updateContact(c.id, {nextFollowUp: e.target.value || null});
+    toast('Próximo seguimiento actualizado');
+  });
+  const advBtn = root.querySelector('#cd-advance-stage');
+  if(advBtn) advBtn.addEventListener('click', ()=>{
+    const ns = nextStageKey(c.stage||'nuevo');
+    updateContact(c.id, {stage: ns, category: categoryFromStage(ns)});
+    toast('Etapa actualizada a "' + stageLabel(ns) + '"');
+    renderContactDetail();
+  });
+  const propLink = root.querySelector('#cd-property-link');
+  if(propLink) propLink.addEventListener('click', ()=>openPropertyForm(c.propertyId));
   renderContactDetailTab(c);
+}
+function renderStageTrack(root, c){
+  const track = root.querySelector('#cd-stage-track');
+  if(!track) return;
+  const stages = STAGES.filter(s=>s.key!=='perdido');
+  const curIdx = stages.findIndex(s=>s.key===(c.stage||'nuevo'));
+  track.innerHTML = stages.map((s,i)=>`<button class="st-btn ${i<=curIdx?'done':''} ${i===curIdx?'current':''}" data-stage="${s.key}" style="background:${s.color}">${escapeHtml(s.label)}</button>`).join('')
+    + (c.stage==='perdido' ? `<button class="st-btn current" data-stage="perdido" style="background:${stageInfo('perdido').color}">Perdido</button>` : `<button class="st-btn" data-stage="perdido" style="background:${stageInfo('perdido').color}; opacity:.35;">Perdido</button>`);
+  track.querySelectorAll('.st-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+    const ns = btn.dataset.stage;
+    updateContact(c.id, {stage: ns, category: categoryFromStage(ns)});
+    toast('Etapa: ' + stageLabel(ns));
+    renderContactDetail();
+  }));
 }
 function handleQuickAction(action, c){
   if(action==='reunion') openEventForm(null, c.id, 'reunion');
@@ -936,7 +1154,13 @@ function contactInfoTabHtml(c){
   const customHtml = state.fields.length ? `<div class="card"><h3>Campos personalizados</h3>` + state.fields.map(f=>`
     <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0;"><span style="color:var(--muted);">${escapeHtml(f.name)}</span><span>${escapeHtml((c.customFields||{})[f.id]||'—')}</span></div>
   `).join('') + `</div>` : '';
-  return `${phonesHtml}${emailsHtml}
+  const prop = findProperty(c.propertyId);
+  const propHtml = prop ? `<div class="card" id="cd-property-card"><h3>Propiedad de interés</h3>
+    <div style="font-weight:700; font-size:14.5px;">${escapeHtml(prop.name)}</div>
+    <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">${escapeHtml(prop.type)} · ${escapeHtml(prop.transaction)} ${prop.price?(' · '+fmtMoney(prop.price)):''}</div>
+    <span class="status-badge status-${(prop.status||'').toLowerCase()}" style="margin-top:6px; display:inline-block;">${escapeHtml(prop.status||'')}</span>
+  </div>` : '';
+  return `${propHtml}${phonesHtml}${emailsHtml}
     ${c.website ? `<div class="card"><a href="${escapeHtml(c.website)}" target="_blank" rel="noopener">${escapeHtml(c.website)}</a></div>` : ''}
     ${c.address ? `<div class="card"><h3>Dirección</h3><p style="margin:0; font-size:13.5px;">${escapeHtml(c.address)}</p>${c.lat!=null?`<p style="margin:4px 0 0; font-size:11.5px; color:var(--muted);">${c.lat}, ${c.lng}</p>`:''}</div>` : ''}
     ${groupsHtml ? `<div class="card"><h3>Grupos</h3>${groupsHtml}</div>` : ''}
@@ -967,6 +1191,10 @@ function invoicesTabHtml(c){
   return invs.length ? invs.map(invoiceRowHtml).join('') : `<div class="empty-state">Sin facturas para este contacto.</div>`;
 }
 function bindDetailTabEvents(c){
+  if(uiState.contactDetailTab === 'contacto'){
+    const propCard = document.getElementById('cd-property-card');
+    if(propCard){ propCard.style.cursor = 'pointer'; propCard.addEventListener('click', ()=>openPropertyForm(c.propertyId)); }
+  }
   if(uiState.contactDetailTab === 'actividad'){
     state.voicenotes.filter(v=>v.contactId===c.id).forEach(v=> mountVoicePlayer('vp-'+v.id, v.id));
   }
@@ -1372,6 +1600,8 @@ function printInvoice(inv){
 function renderMoreView(){
   document.getElementById('main').innerHTML = `<div class="more-grid">
     <div class="more-card" data-go="dashboard"><div class="mc-icon">${ICO.chart}</div><div class="mc-title">Dashboard</div></div>
+    <div class="more-card" data-go="properties"><div class="mc-icon">${ICO.building}</div><div class="mc-title">Propiedades</div></div>
+    <div class="more-card" data-go="advisors"><div class="mc-icon">${ICO.users}</div><div class="mc-title">Asesoras</div></div>
     <div class="more-card" data-go="documents"><div class="mc-icon">${ICO.doc}</div><div class="mc-title">Documentos</div></div>
     <div class="more-card" data-go="fields"><div class="mc-icon">${ICO.tag}</div><div class="mc-title">Campos y grupos</div></div>
     <div class="more-card" data-go="settings"><div class="mc-icon">${ICO.settings}</div><div class="mc-title">Ajustes</div></div>
@@ -1389,6 +1619,10 @@ function renderDashboardView(){
   const tasksToday = state.events.filter(e=> sameDay(new Date(e.date), today) && !e.completed).length;
   const receivable = state.invoices.filter(i=> i.status==='enviada' || i.status==='vencida')
     .reduce((s,i)=> s + computeInvoiceTotals(i.items, i.ivaRate).total, 0);
+  const stageCounts = STAGES.map(s=>({...s, count: state.contacts.filter(c=>(c.stage||'nuevo')===s.key).length}));
+  const todayStr = today.toISOString().slice(0,10);
+  const pending = state.contacts.filter(c=> c.nextFollowUp && c.nextFollowUp.slice(0,10) <= todayStr && c.stage!=='cerrado' && c.stage!=='perdido')
+    .sort((a,b)=> (a.nextFollowUp||'').localeCompare(b.nextFollowUp||''));
   document.getElementById('main').innerHTML = `
     <div class="dash-cards">
       <div class="dash-card"><div class="num">${totalCliente}</div><div class="lbl">Clientes</div></div>
@@ -1397,8 +1631,22 @@ function renderDashboardView(){
       <div class="dash-card"><div class="num">${tasksToday}</div><div class="lbl">Tareas hoy</div></div>
       <div class="dash-card" style="grid-column:1/3;"><div class="num">${fmtMoney(receivable)}</div><div class="lbl">Por cobrar</div></div>
     </div>
+    <div class="card"><h3>Embudo de oportunidades</h3>
+      <div class="funnel-row">${stageCounts.map(s=>`<div class="funnel-card" style="border-top:3px solid ${s.color};"><div class="num">${s.count}</div><div class="lbl">${escapeHtml(s.label)}</div></div>`).join('')}</div>
+    </div>
+    <div class="card"><h3>Seguimientos pendientes${pending.length?` (${pending.length})`:''}</h3>
+      <div id="dash-pending-list">${pending.length ? pending.map(c=>{
+        const overdue = c.nextFollowUp.slice(0,10) < todayStr;
+        return `<div class="followup-row" data-id="${c.id}">
+          <span class="fu-badge ${overdue?'overdue':'today'}">${overdue?'Vencido':'Hoy'}</span>
+          <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${c.avatarColor}">${initials(c.name)}</div>
+          <div style="flex:1;"><div style="font-weight:700; font-size:13.5px;">${escapeHtml(c.name)}</div><div style="font-size:11px; color:var(--muted);">${escapeHtml(stageLabel(c.stage||'nuevo'))} · ${escapeHtml(advisorLabel(c.advisorId)||'Sin asesora')}</div></div>
+        </div>`;
+      }).join('') : '<div class="empty-state">Sin seguimientos vencidos o para hoy.</div>'}</div>
+    </div>
     <div class="chart-wrap"><h4>Contactos nuevos por mes</h4><canvas id="chart-contacts" height="180"></canvas></div>
     <div class="chart-wrap"><h4>Facturación mensual</h4><canvas id="chart-billing" height="180"></canvas></div>`;
+  document.querySelectorAll('#dash-pending-list .followup-row').forEach(row=> row.addEventListener('click', ()=>openContactDetail(row.dataset.id)));
   renderCharts();
 }
 function last6Months(){
@@ -1501,6 +1749,124 @@ function openDocDetail(docId){
       confirmDialog('¿Eliminar este documento?', async ()=>{
         await idbDelete('files', d.id);
         state.documents = state.documents.filter(x=>x.id!==d.id); persist('documents'); closeSheet(); render();
+      });
+    });
+  });
+}
+
+/* ===================== VIEW: PROPERTIES CATALOG ===================== */
+function propertyRowHtml(p){
+  const interestedCount = state.contacts.filter(c=>c.propertyId===p.id).length;
+  return `<div class="property-row" data-id="${p.id}">
+    <div class="p-icon">${ICO.building}</div>
+    <div class="p-main">
+      <div class="p-name">${escapeHtml(p.name)}</div>
+      <div class="p-sub">${escapeHtml(p.type)} · ${escapeHtml(p.transaction)}${p.price?(' · '+fmtMoney(p.price)):''}${interestedCount?(' · '+interestedCount+' interesado(s)'):''}</div>
+    </div>
+    <span class="status-badge status-${(p.status||'').toLowerCase()}">${escapeHtml(p.status||'')}</span>
+  </div>`;
+}
+function renderPropertiesView(){
+  document.getElementById('main').innerHTML = `
+    <div class="search-bar-inline">${ICO.search}<input id="property-search" placeholder="Buscar propiedad..." value="${escapeHtml(uiState.propertySearch)}"></div>
+    <div id="properties-list"></div>`;
+  document.getElementById('property-search').addEventListener('input', (e)=>{ uiState.propertySearch = e.target.value; renderPropertiesList(); });
+  renderPropertiesList();
+}
+function renderPropertiesList(){
+  const list = document.getElementById('properties-list'); if(!list) return;
+  const q = uiState.propertySearch.trim().toLowerCase();
+  const props = state.properties.filter(p=> !q || p.name.toLowerCase().includes(q) || (p.address||'').toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  list.innerHTML = props.length ? props.map(propertyRowHtml).join('') : `<div class="empty-state">Sin propiedades en el catálogo.</div>`;
+  list.querySelectorAll('.property-row').forEach(row=> row.addEventListener('click', ()=>openPropertyForm(row.dataset.id)));
+}
+function openPropertyForm(propertyId){
+  const p = propertyId ? findProperty(propertyId) : null;
+  const interested = p ? state.contacts.filter(c=>c.propertyId===p.id) : [];
+  const html = `<div class="sheet-handle"></div>
+  <div class="sheet-header"><button class="icon-btn ghost" id="sheet-close">${ICO.close}</button><h2>${p?'Editar propiedad':'Nueva propiedad'}</h2></div>
+  <div class="sheet-body">
+    <label>Nombre</label><input id="prop-name" value="${escapeHtml(p?p.name:'')}">
+    <label>Tipo</label><select id="prop-type">${PROPERTY_TYPES.map(t=>`<option ${p&&p.type===t?'selected':''}>${t}</option>`).join('')}</select>
+    <label>Transacción</label><select id="prop-transaction">${PROPERTY_TRANSACTIONS.map(t=>`<option ${p&&p.transaction===t?'selected':''}>${t}</option>`).join('')}</select>
+    <label>Dirección</label><input id="prop-address" value="${escapeHtml(p?p.address:'')}">
+    <label>Precio</label><input type="number" id="prop-price" min="0" step="0.01" value="${p&&p.price!=null?p.price:''}">
+    <label>Estatus</label><select id="prop-status">${PROPERTY_STATUSES.map(s=>`<option ${p&&p.status===s?'selected':''}>${s}</option>`).join('')}</select>
+    <button class="btn btn-primary btn-block" id="save-property" style="margin-top:14px;">Guardar</button>
+    ${p?`<button type="button" class="btn btn-danger btn-block" style="margin-top:10px;" id="delete-property-btn">Eliminar propiedad</button>`:''}
+    ${p&&interested.length?`<div style="margin-top:16px;"><label>Contactos interesados (${interested.length})</label>` + interested.map(c=>`<div class="contact-row" data-cid="${c.id}" style="cursor:pointer;"><div class="avatar" style="background:${c.avatarColor}">${initials(c.name)}</div><div class="contact-main"><div class="cname">${escapeHtml(c.name)}</div><div class="csub">${escapeHtml(stageLabel(c.stage||'nuevo'))}</div></div></div>`).join('') + `</div>` : ''}
+  </div>`;
+  openSheet(html, (root)=>{
+    root.querySelector('#sheet-close').addEventListener('click', closeSheet);
+    root.querySelector('#save-property').addEventListener('click', ()=>{
+      const name = root.querySelector('#prop-name').value.trim();
+      if(!name){ toast('Escribe un nombre'); return; }
+      const priceVal = root.querySelector('#prop-price').value;
+      const payload = {
+        name, type: root.querySelector('#prop-type').value, transaction: root.querySelector('#prop-transaction').value,
+        address: root.querySelector('#prop-address').value.trim(), price: priceVal ? parseFloat(priceVal) : null,
+        status: root.querySelector('#prop-status').value
+      };
+      if(p){ updateProperty(p.id, payload); toast('Propiedad actualizada'); }
+      else { addProperty(payload); toast('Propiedad creada'); }
+      closeSheet(); render();
+      if(uiState.contactDetailId) renderContactDetail();
+    });
+    if(p) root.querySelector('#delete-property-btn').addEventListener('click', ()=>{
+      confirmDialog('¿Eliminar esta propiedad? Se desvinculará de los contactos que la tengan asignada.', ()=>{
+        deleteProperty(p.id); closeSheet(); render();
+        if(uiState.contactDetailId) renderContactDetail();
+      });
+    });
+    root.querySelectorAll('[data-cid]').forEach(row=> row.addEventListener('click', ()=>{ closeSheet(); openContactDetail(row.dataset.cid); }));
+  });
+}
+
+/* ===================== VIEW: ADVISORS CATALOG ===================== */
+function advisorRowHtml(a){
+  const assigned = state.contacts.filter(c=>c.advisorId===a.id);
+  const closedCount = assigned.filter(c=>c.stage==='cerrado').length;
+  return `<div class="advisor-row" data-id="${a.id}">
+    <div class="avatar" style="background:${a.color}">${initials(a.name)}</div>
+    <div class="contact-main">
+      <div class="cname">${escapeHtml(a.name)} ${a.active===false?'<span class="chip-outline chip">Inactiva</span>':''}</div>
+      <div class="csub">${assigned.length} asignado(s) · ${closedCount} cerrado(s)</div>
+    </div>
+  </div>`;
+}
+function renderAdvisorsView(){
+  document.getElementById('main').innerHTML = `<div id="advisors-list"></div>`;
+  const list = document.getElementById('advisors-list');
+  const advisors = state.advisors.slice().sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  list.innerHTML = advisors.length ? advisors.map(advisorRowHtml).join('') : `<div class="empty-state">Sin asesoras en el catálogo.</div>`;
+  list.querySelectorAll('.advisor-row').forEach(row=> row.addEventListener('click', ()=>openAdvisorForm(row.dataset.id)));
+}
+function openAdvisorForm(advisorId){
+  const a = advisorId ? findAdvisor(advisorId) : null;
+  const html = `<div class="sheet-handle"></div>
+  <div class="sheet-header"><button class="icon-btn ghost" id="sheet-close">${ICO.close}</button><h2>${a?'Editar asesora':'Nueva asesora'}</h2></div>
+  <div class="sheet-body">
+    <label>Nombre</label><input id="adv-name" value="${escapeHtml(a?a.name:'')}">
+    <label>Color</label><div class="color-swatches" id="adv-colors">${GROUP_COLORS.map((c,i)=>`<div class="color-dot ${(a?a.color===c:i===0)?'selected':''}" data-color="${c}" style="background:${c}"></div>`).join('')}</div>
+    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;"><input type="checkbox" id="adv-active" style="width:auto;" ${!a||a.active!==false?'checked':''}> Activa</label>
+    <button class="btn btn-primary btn-block" id="save-advisor" style="margin-top:14px;">Guardar</button>
+    ${a?`<button type="button" class="btn btn-danger btn-block" style="margin-top:10px;" id="delete-advisor-btn">Eliminar asesora</button>`:''}
+  </div>`;
+  let selColor = a ? a.color : GROUP_COLORS[0];
+  openSheet(html, (root)=>{
+    root.querySelector('#sheet-close').addEventListener('click', closeSheet);
+    root.querySelectorAll('.color-dot').forEach(d=> d.addEventListener('click', ()=>{ root.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('selected')); d.classList.add('selected'); selColor=d.dataset.color; }));
+    root.querySelector('#save-advisor').addEventListener('click', ()=>{
+      const name = root.querySelector('#adv-name').value.trim();
+      if(!name){ toast('Escribe un nombre'); return; }
+      const payload = {name, color: selColor, active: root.querySelector('#adv-active').checked};
+      if(a){ updateAdvisor(a.id, payload); toast('Asesora actualizada'); }
+      else { addAdvisor(payload); toast('Asesora creada'); }
+      closeSheet(); render();
+    });
+    if(a) root.querySelector('#delete-advisor-btn').addEventListener('click', ()=>{
+      confirmDialog('¿Eliminar esta asesora? Se desvinculará de los contactos asignados.', ()=>{
+        deleteAdvisor(a.id); closeSheet(); render();
       });
     });
   });
@@ -1680,7 +2046,9 @@ function render(){
   else if(currentView === 'documents') renderDocumentsView();
   else if(currentView === 'fields') renderFieldsView();
   else if(currentView === 'settings') renderSettingsView();
-  document.querySelectorAll('#bottom-nav button').forEach(b=> b.classList.toggle('active', b.dataset.view===currentView || (['dashboard','documents','fields','settings'].includes(currentView) && b.dataset.view==='more')));
+  else if(currentView === 'properties') renderPropertiesView();
+  else if(currentView === 'advisors') renderAdvisorsView();
+  document.querySelectorAll('#bottom-nav button').forEach(b=> b.classList.toggle('active', b.dataset.view===currentView || (['dashboard','documents','fields','settings','properties','advisors'].includes(currentView) && b.dataset.view==='more')));
 }
 
 /* ===================== INIT ===================== */
@@ -1694,10 +2062,19 @@ async function init(){
 }
 document.addEventListener('DOMContentLoaded', init);
 
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw-micrm.js').catch(() => {});
+  });
+}
+
 /* ===================== TEST HOOKS (exposed for automated QA only) ===================== */
 window.__MICRM_TEST__ = {
   state, LS, computeInvoiceTotals, nearestNeighborRoute, haversine, exportAllData, importAllData,
-  addContact, updateContact, deleteContact, findContact, go, render, uid
+  addContact, updateContact, deleteContact, findContact, go, render, uid,
+  addProperty, updateProperty, deleteProperty, findProperty,
+  addAdvisor, updateAdvisor, deleteAdvisor, findAdvisor,
+  STAGES, categoryFromStage, nextStageKey, stageLabel
 };
 
 })();
