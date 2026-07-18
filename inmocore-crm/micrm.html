@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" defer></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
 <style>
 :root{
   --bg:#f3f1fa; --card:#ffffff; --text:#1c1330; --muted:#79708f; --border:#ece8f7;
@@ -623,6 +624,59 @@ function exportInvoicesCSV(){
     rows.push(['#'+String(inv.number).padStart(4,'0'), contactName(inv.contactId), fmtDate(inv.date), inv.status, t.subtotal.toFixed(2), t.iva.toFixed(2), t.total.toFixed(2)]);
   });
   downloadFile('facturas_micrm.csv', toCSV(rows), 'text/csv');
+}
+function exportAllDataXLSX(){
+  if(typeof XLSX === 'undefined'){ toast('No se pudo cargar el motor de Excel (sin conexión). Usa Exportar JSON o CSV.'); return; }
+  const wb = XLSX.utils.book_new();
+  const addSheet = (name, rows) => XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), name);
+
+  addSheet('Contactos', [
+    ['Nombre','Cargo','Etapa','Teléfono','Email','Sitio web','Dirección','Propiedad','Asesora','Grupos','Próximo seguimiento','Creado'],
+    ...state.contacts.map(c=>[
+      c.name, c.cargo||'', stageLabel(c.stage||'nuevo'), (c.phones[0]||{}).number||'', (c.emails[0]||{}).email||'',
+      c.website||'', c.address||'', propertyLabel(c.propertyId), advisorLabel(c.advisorId),
+      (c.groups||[]).map(gid=>{ const g=state.groups.find(x=>x.id===gid); return g?g.name:''; }).filter(Boolean).join(', '),
+      c.nextFollowUp||'', c.createdAt?fmtDate(c.createdAt):''
+    ])
+  ]);
+
+  addSheet('Propiedades', [
+    ['Nombre','Tipo','Transacción','Dirección','Precio','Estatus','Contactos interesados'],
+    ...state.properties.map(p=>[p.name, p.type, p.transaction, p.address||'', p.price!=null?p.price:'', p.status||'',
+      state.contacts.filter(c=>c.propertyId===p.id).length])
+  ]);
+
+  addSheet('Asesoras', [
+    ['Nombre','Activa','Contactos asignados','Cerrados'],
+    ...state.advisors.map(a=>{
+      const assigned = state.contacts.filter(c=>c.advisorId===a.id);
+      return [a.name, a.active!==false?'Sí':'No', assigned.length, assigned.filter(c=>c.stage==='cerrado').length];
+    })
+  ]);
+
+  addSheet('Notas', [
+    ['Contacto','Fecha','Nota'],
+    ...state.notes.map(n=>[contactName(n.contactId), n.createdAt?fmtDateTime(n.createdAt):'', n.text])
+  ]);
+
+  addSheet('Agenda', [
+    ['Contacto','Tipo','Título','Fecha','Completado','Recordatorio'],
+    ...state.events.map(e=>[contactName(e.contactId), e.type==='tarea'?'Tarea':'Reunión', e.title, e.date?fmtDateTime(e.date):'', e.completed?'Sí':'No', e.reminder?'Sí':'No'])
+  ]);
+
+  addSheet('Facturas', [
+    ['Número','Contacto','Fecha','Estado','Subtotal','IVA','Total'],
+    ...state.invoices.map(inv=>{
+      const t = computeInvoiceTotals(inv.items, inv.ivaRate);
+      return ['#'+String(inv.number).padStart(4,'0'), contactName(inv.contactId), inv.date?fmtDate(inv.date):'', statusLabel(inv.status), t.subtotal, t.iva, t.total];
+    })
+  ]);
+
+  addSheet('Grupos', [['Nombre'], ...state.groups.map(g=>[g.name])]);
+  addSheet('Campos personalizados', [['Nombre','Tipo'], ...state.fields.map(f=>[f.name, f.type])]);
+
+  XLSX.writeFile(wb, 'micrm_datos.xlsx');
+  toast('Excel exportado');
 }
 
 /* ===================== BACKUP FILE SYNC (File System Access API) ===================== */
@@ -1967,6 +2021,7 @@ function renderSettingsView(){
       <button class="btn btn-outline btn-block" id="export-json">Exportar todo (JSON)</button>
       <input type="file" id="import-json-input" accept="application/json" class="hidden">
       <button class="btn btn-outline btn-block" id="import-json" style="margin-top:10px;">Importar (JSON)</button>
+      <button class="btn btn-outline btn-block" id="export-xlsx" style="margin-top:10px;">Exportar todo (Excel)</button>
       <button class="btn btn-outline btn-block" id="export-contacts-csv" style="margin-top:10px;">Exportar contactos (CSV)</button>
       <button class="btn btn-danger btn-block" id="wipe-data" style="margin-top:10px;">Borrar todos los datos</button>
     </div>`;
@@ -1985,6 +2040,7 @@ function renderSettingsView(){
   document.getElementById('pin-btn').addEventListener('click', openPinSetup);
   document.getElementById('link-backup-btn').addEventListener('click', linkBackupFile);
   document.getElementById('export-json').addEventListener('click', ()=> downloadFile('micrm_datos.json', JSON.stringify(exportAllData(), null, 2), 'application/json'));
+  document.getElementById('export-xlsx').addEventListener('click', exportAllDataXLSX);
   document.getElementById('export-contacts-csv').addEventListener('click', exportContactsCSV);
   document.getElementById('import-json').addEventListener('click', ()=> document.getElementById('import-json-input').click());
   document.getElementById('import-json-input').addEventListener('change', (e)=>{
