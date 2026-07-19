@@ -1,0 +1,6 @@
+/* Hero KPI (Inicio) */
+.hero-kpi{
+  background:linear-gradient(150deg,rgba(45,212,167,.13),rgba(45,212,167,.02) 55%),var(--surface);
+  border:1px solid rgba(45,212,167,.3);
+}
+.hero-kpi .value{font-size:1.7rem;}

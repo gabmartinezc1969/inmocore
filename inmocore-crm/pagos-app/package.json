@@ -1,0 +1,22 @@
+{
+  "name": "pagos-app",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Pagos - Libro Mayor 2026: app modular de finanzas personales",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "chart.js": "4.4.4",
+    "xlsx": "0.18.5"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^2.1.0"
+  }
+}

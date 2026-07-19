@@ -1,0 +1,11 @@
+/* Debt */
+.debt-card{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:17px 19px;box-shadow:var(--shadow);}
+.debt-card h4{margin:0 0 3px;font-size:.98rem;color:var(--text);}
+.debt-card .dc-sub{font-size:.72rem;color:var(--muted);margin-bottom:10px;}
+.debt-input-row{display:flex;gap:8px;align-items:center;margin-top:10px;}
+.debt-input-row input{flex:1;}
+
+.fv-badge{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;padding:2px 8px;border-radius:999px;}
+.fv-badge.fijo{background:var(--accent-soft);color:var(--accent);}
+.fv-badge.variable{background:var(--gold-soft);color:var(--gold);}
+.fv-badge.extra{background:var(--red-soft);color:var(--red);}

@@ -1,0 +1,29 @@
+import{g as r,s as c,i as D,j as F,h as q,r as P,a as S,b as o,C as L,d as m,O as x,x as E}from"./pagos-CfuwYeG-.js";import{d as C}from"./charts-D8ecBF4s.js";let f=null,M=!1;function A(t){if(f=t||null,document.getElementById("assetModalTitle").textContent=t?"Editar activo":"Registrar activo",t){const a=r.assets.find(s=>s.id===t);document.getElementById("asNombre").value=a.nombre,document.getElementById("asTipo").value=a.tipo,document.getElementById("asValor").value=a.valor}else document.getElementById("asNombre").value="",document.getElementById("asTipo").value="Propiedad",document.getElementById("asValor").value="";document.getElementById("assetModalBg").classList.add("active")}function j(){M||(M=!0,document.getElementById("btnAddAsset").addEventListener("click",()=>A(null)),document.getElementById("asCancel").addEventListener("click",()=>document.getElementById("assetModalBg").classList.remove("active")),document.getElementById("assetModalBg").addEventListener("click",t=>{t.target.id==="assetModalBg"&&document.getElementById("assetModalBg").classList.remove("active")}),document.getElementById("asSave").addEventListener("click",()=>{const t=document.getElementById("asNombre").value.trim(),a=document.getElementById("asTipo").value,s=parseFloat(document.getElementById("asValor").value)||0;if(!t){E("El nombre es obligatorio");return}const i=r.assets;f?Object.assign(i.find(l=>l.id===f),{nombre:t,tipo:a,valor:s}):i.push({id:"a"+Date.now(),nombre:t,tipo:a,valor:s}),x(i),document.getElementById("assetModalBg").classList.remove("active"),k(),E("Activo guardado")}))}function k(){j();const t=r.assets,a=r.investments,s=c(a,"valor"),i=c(t,"valor")+s,l=D(),y=i-l,d=F(),T=c(t.filter(e=>e.tipo==="Cuenta bancaria"||e.tipo==="Efectivo"),"valor")+s,u=q().slice(-6),B=u.length?c(u.map(e=>({v:P(S({year:e.year,monthIdx:e.monthIdx,tipo:"E"}))})),"v")/u.length:0,I=B>0?T/B:null,g=c(a,"capital"),v=g>0?(s-g)/g:null,h=i>0?l/i:null;document.getElementById("patCards").innerHTML=`
+    <div class="card hero-kpi"><div class="label">Patrimonio neto</div><div class="value ${y>=0?"pos":"neg"}">${o(y)}</div>
+      <div class="foot">Activos ${o(i)} − deuda ${o(l)}</div></div>
+    <div class="card"><div class="label">Activos totales</div><div class="value">${o(i)}</div>
+      <div class="foot">${t.length} activo(s) + ${a.length} inversión(es)</div></div>
+    <div class="card"><div class="label">Deuda total</div><div class="value neg">${o(l)}</div>
+      <div class="foot">Créditos registrados + saldos manuales</div></div>
+  `;const $=d.total/100,w=d.total>=80?"#2DD4A7":d.total>=60?"#E8B34B":d.total>=40?"#F2C14E":"#F0655A";document.getElementById("scoreValue").textContent=d.total,document.getElementById("scoreLabel").textContent=d.label,C("chartScoreGauge","doughnut",{datasets:[{data:[$,1-$],backgroundColor:[w,"rgba(255,255,255,.06)"],borderWidth:0}]},{rotation:-90,circumference:180,cutout:"75%",plugins:{legend:{display:!1},tooltip:{enabled:!1}},scales:{}}),document.getElementById("scoreBreakdown").innerHTML=d.parts.map(e=>`
+    <div class="budget-row" style="margin-bottom:10px;">
+      <div class="br-head"><div class="br-name" style="font-size:.78rem;">${e.nombre}</div><div class="br-pct">${e.pts}/${e.max}</div></div>
+      <div class="budget-track" style="height:7px;"><div class="budget-fill ${e.pts/e.max>=.7?"green":e.pts/e.max>=.4?"yellow":"red"}" style="width:${e.pts/e.max*100}%"></div></div>
+      <div class="br-foot"><span>${e.detalle}</span></div>
+    </div>`).join("");const n={};t.forEach(e=>{n[e.tipo]=(n[e.tipo]||0)+e.valor}),s>0&&(n.Inversiones=s);const b=Object.keys(n);C("chartPatrimonio","bar",{labels:[...b,"Deuda total"],datasets:[{data:[...b.map(e=>n[e]),-l],backgroundColor:[...b.map((e,p)=>L.palette[p%L.palette.length]),"#F0655A"],borderRadius:6}]},{plugins:{legend:{display:!1},tooltip:{callbacks:{label:e=>" "+o(Math.abs(e.parsed.y))}}}}),document.getElementById("patMetricas").innerHTML=`
+    <div class="card"><div class="label">Tasa de ahorro (6m)</div><div class="value ${d.avgTasa>=0?"pos":"neg"}">${m(d.avgTasa)}</div></div>
+    <div class="card"><div class="label">% de endeudamiento</div><div class="value">${h===null?"—":m(h)}</div><div class="foot">Deuda / activos</div></div>
+    <div class="card"><div class="label">Liquidez</div><div class="value">${I===null?"—":I.toFixed(1)+" meses"}</div><div class="foot">Cobertura del gasto con activos líquidos</div></div>
+    <div class="card"><div class="label">Rendimiento inversiones</div><div class="value ${v===null?"":v>=0?"pos":"neg"}">${v===null?"—":m(v)}</div></div>
+    <div class="card"><div class="label">Carga de deuda mensual</div><div class="value">${m(d.cargaDeuda)}</div><div class="foot">Pagos de deuda / ingreso (6m)</div></div>
+  `,document.getElementById("assetsList").innerHTML=t.length?t.map(e=>`
+    <div class="reminder-item">
+      <div class="ri-left">
+        <div class="ri-info"><div class="ri-cat">${e.nombre} <span class="fv-badge variable" style="margin-left:6px;">${e.tipo}</span></div></div>
+      </div>
+      <div class="ri-right">
+        <div class="ri-amt">${o(e.valor)}</div>
+        <button class="icon-btn" data-asset-edit="${e.id}" title="Editar" aria-label="Editar ${e.nombre}">✎</button>
+        <button class="icon-btn" data-asset-del="${e.id}" title="Eliminar" aria-label="Eliminar ${e.nombre}">✕</button>
+      </div>
+    </div>`).join(""):'<div class="empty">Registra tus propiedades, vehículos y cuentas para calcular tu patrimonio neto.</div>',document.querySelectorAll("[data-asset-edit]").forEach(e=>e.addEventListener("click",()=>A(e.dataset.assetEdit))),document.querySelectorAll("[data-asset-del]").forEach(e=>e.addEventListener("click",()=>{confirm("¿Eliminar este activo del registro?")&&(x(r.assets.filter(p=>p.id!==e.dataset.assetDel)),k(),E("Activo eliminado"))}))}export{k as render};

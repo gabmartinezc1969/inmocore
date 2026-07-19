@@ -1,0 +1,5 @@
+/* Treemap */
+.treemap{display:flex;flex-wrap:wrap;gap:4px;height:320px;}
+.tm-tile{display:flex;flex-direction:column;justify-content:flex-end;padding:9px 11px;border-radius:8px;color:#fff;font-size:.74rem;overflow:hidden;position:relative;min-width:70px;min-height:40px;}
+.tm-tile .tm-name{font-weight:700;font-size:.78rem;text-shadow:0 1px 4px rgba(0,0,0,.5);}
+.tm-tile .tm-val{font-family:'JetBrains Mono',monospace;font-size:.72rem;opacity:.95;text-shadow:0 1px 4px rgba(0,0,0,.5);}

@@ -1,0 +1,8 @@
+/* Alerts */
+.alert-item{display:flex;gap:13px;align-items:flex-start;background:var(--surface-2);border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:11px;padding:13px 15px;margin-bottom:9px;}
+.alert-item.sev-high{border-left-color:var(--red);}
+.alert-item.sev-medium{border-left-color:var(--amber);}
+.alert-item.sev-low{border-left-color:var(--accent);}
+.alert-item .ai-icon{font-size:1.1rem;flex:none;margin-top:1px;}
+.alert-item .ai-title{font-weight:700;font-size:.86rem;color:var(--text);}
+.alert-item .ai-detail{font-size:.78rem;color:var(--muted);margin-top:2px;}

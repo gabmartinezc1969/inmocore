@@ -1,0 +1,5 @@
+/* Gauge */
+.gauge-wrap{position:relative;height:170px;display:flex;align-items:center;justify-content:center;}
+.gauge-center{position:absolute;top:58%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.gauge-center .gv{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--text);}
+.gauge-center .gl{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}

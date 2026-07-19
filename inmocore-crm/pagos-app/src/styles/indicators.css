@@ -1,0 +1,9 @@
+/* Semaforo */
+.semaforo{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;}
+.semaforo.green{background:var(--accent);}
+.semaforo.yellow{background:var(--amber);}
+.semaforo.red{background:var(--red);}
+
+.kpi-trend{font-size:.72rem;font-weight:700;display:inline-flex;align-items:center;gap:3px;}
+.kpi-trend.up{color:var(--accent);}
+.kpi-trend.down{color:var(--red);}
