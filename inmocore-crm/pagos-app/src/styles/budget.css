@@ -1,0 +1,12 @@
+/* Budget bars */
+.budget-row{margin-bottom:16px;}
+.budget-row .br-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;font-size:.82rem;}
+.budget-row .br-head .br-name{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--text);}
+.budget-row .br-head .br-pct{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--muted);}
+.budget-track{position:relative;height:15px;background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden;border:1px solid var(--line);}
+.budget-fill{height:100%;border-radius:6px 0 0 6px;transition:width .3s;}
+.budget-fill.green{background:var(--accent);}
+.budget-fill.yellow{background:var(--amber);}
+.budget-fill.red{background:var(--red);}
+.budget-marker{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);}
+.budget-row .br-foot{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:4px;}

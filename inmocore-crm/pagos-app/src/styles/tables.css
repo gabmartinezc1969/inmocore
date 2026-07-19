@@ -1,0 +1,16 @@
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:.83rem;}
+th{
+  text-align:left;font-size:.64rem;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);font-weight:700;padding:9px 10px;border-bottom:1px solid var(--line);
+  white-space:nowrap;
+}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);color:var(--text);}
+tr.total-row td{font-weight:700;border-top:2px solid var(--accent);border-bottom:none;background:rgba(45,212,167,.05);}
+.num-cell{font-family:'JetBrains Mono',monospace;text-align:right;white-space:nowrap;}
+.pos-text{color:var(--accent);}
+.neg-text{color:var(--red);}
+tr.clickable:hover td{background:var(--accent-soft);cursor:default;}
+.table-wrap{overflow-x:auto;}
+.cat-cell{display:flex;align-items:center;gap:8px;}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;}

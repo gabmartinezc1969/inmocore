@@ -1,0 +1,7 @@
+/* Goals / credit cards */
+.goal-card{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:17px 19px;box-shadow:var(--shadow);margin-bottom:12px;}
+.goal-card .gc-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:10px;flex-wrap:wrap;}
+.goal-card .gc-name{font-weight:700;font-family:'Space Grotesk',sans-serif;font-size:1.05rem;color:var(--text);}
+.goal-card .gc-meta{font-size:.74rem;color:var(--muted);margin-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;}
+.goal-card .gc-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.spark-cell{display:flex;align-items:center;gap:8px;}
