@@ -340,6 +340,7 @@ const ICO = {
   building:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/></svg>',
   users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/><circle cx="17.5" cy="9" r="2.8"/><path d="M15.8 13.8c2.7.4 4.7 2.7 4.7 5.5"/></svg>',
   forward:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>',
+  report:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3M8 11h3v5H8zM13 8h3v8h-3z"/></svg>',
 };
 
 /* ===================== STATE / STORAGE ===================== */
@@ -683,8 +684,10 @@ function exportAllDataXLSX(){
 let backupHandle = null, backupWriteTimer = null;
 async function scheduleBackupWrite(){
   if(!backupHandle) return;
+  // Coalesce writes that happen in the same tick (e.g. import/seed touching many
+  // keys at once) into a single write, but otherwise persist immediately.
   clearTimeout(backupWriteTimer);
-  backupWriteTimer = setTimeout(writeBackupNow, 800);
+  backupWriteTimer = setTimeout(writeBackupNow, 0);
 }
 async function writeBackupNow(){
   if(!backupHandle) return;
@@ -776,7 +779,7 @@ function applyTheme(){
 
 /* ===================== ROUTER ===================== */
 let currentView = 'contacts';
-const VIEWS = ['contacts','agenda','map','invoices','more','dashboard','documents','fields','settings','properties','advisors'];
+const VIEWS = ['contacts','agenda','map','invoices','more','dashboard','documents','fields','settings','properties','advisors','reports'];
 function go(view){
   currentView = view;
   document.querySelectorAll('#bottom-nav button').forEach(b=> b.classList.toggle('active', b.dataset.view === view));
@@ -794,7 +797,7 @@ function renderHeader(){
   const hd = document.getElementById('app-header');
   const titles = {contacts:'Contactos', agenda:'Agenda', map:'Mapa y rutas', invoices:'Facturas', more:'Más',
     dashboard:'Dashboard', documents:'Documentos', fields:'Campos y grupos', settings:'Ajustes',
-    properties:'Propiedades', advisors:'Asesoras'};
+    properties:'Propiedades', advisors:'Asesoras', reports:'Reportes'};
   let extra = '';
   const activeFilters = [uiState.advisorFilter, uiState.propertyFilter, uiState.groupFilter].filter(Boolean).length;
   if(currentView === 'contacts'){
@@ -1654,6 +1657,7 @@ function printInvoice(inv){
 function renderMoreView(){
   document.getElementById('main').innerHTML = `<div class="more-grid">
     <div class="more-card" data-go="dashboard"><div class="mc-icon">${ICO.chart}</div><div class="mc-title">Dashboard</div></div>
+    <div class="more-card" data-go="reports"><div class="mc-icon">${ICO.report}</div><div class="mc-title">Reportes</div></div>
     <div class="more-card" data-go="map"><div class="mc-icon">${ICO.route}</div><div class="mc-title">Mapa y rutas</div></div>
     <div class="more-card" data-go="invoices"><div class="mc-icon">${ICO.file}</div><div class="mc-title">Facturas</div></div>
     <div class="more-card" data-go="documents"><div class="mc-icon">${ICO.doc}</div><div class="mc-title">Documentos</div></div>
@@ -2000,6 +2004,100 @@ function openGroupForm(){
   });
 }
 
+/* ===================== VIEW: REPORTS ===================== */
+const REPORTS = [
+  {
+    key:'pipeline', title:'Pipeline por etapa',
+    compute(){ return STAGES.map(s=>({Etapa:s.label, Contactos: state.contacts.filter(c=>(c.stage||'nuevo')===s.key).length})); }
+  },
+  {
+    key:'advisors', title:'Desempeño por asesora',
+    compute(){
+      return state.advisors.map(a=>{
+        const assigned = state.contacts.filter(c=>c.advisorId===a.id);
+        const cerrados = assigned.filter(c=>c.stage==='cerrado').length;
+        const perdidos = assigned.filter(c=>c.stage==='perdido').length;
+        const activos = assigned.length - cerrados - perdidos;
+        return {
+          Asesora:a.name, Asignados:assigned.length, Activos:activos, Cerrados:cerrados, Perdidos:perdidos,
+          'Tasa de cierre (%)': assigned.length ? Math.round(cerrados/assigned.length*1000)/10 : 0
+        };
+      });
+    }
+  },
+  {
+    key:'properties', title:'Propiedades por estatus',
+    compute(){
+      return state.properties.map(p=>({
+        Propiedad:p.name, Tipo:p.type, Transacción:p.transaction, Estatus:p.status,
+        Precio: p.price!=null ? p.price : '', Interesados: state.contacts.filter(c=>c.propertyId===p.id).length
+      }));
+    }
+  },
+  {
+    key:'activity', title:'Actividad (notas y eventos)',
+    compute(){
+      const notes = state.notes.map(n=>({_d:n.createdAt, Tipo:'Nota', Contacto:contactName(n.contactId), Fecha:n.createdAt?fmtDateTime(n.createdAt):'', Detalle:n.text}));
+      const events = state.events.map(e=>({_d:e.date, Tipo:e.type==='tarea'?'Tarea':'Reunión', Contacto:contactName(e.contactId), Fecha:e.date?fmtDateTime(e.date):'', Detalle:e.title}));
+      return [...notes, ...events].sort((a,b)=> new Date(b._d||0) - new Date(a._d||0)).map(({_d, ...rest})=>rest);
+    }
+  },
+  {
+    key:'invoices', title:'Facturación',
+    compute(){
+      return state.invoices.map(inv=>{
+        const t = computeInvoiceTotals(inv.items, inv.ivaRate);
+        return {
+          'Número':'#'+String(inv.number).padStart(4,'0'), Contacto:contactName(inv.contactId), Estado:statusLabel(inv.status),
+          Fecha: inv.date?fmtDate(inv.date):'', Subtotal:Math.round(t.subtotal*100)/100, IVA:Math.round(t.iva*100)/100, Total:Math.round(t.total*100)/100
+        };
+      });
+    }
+  },
+];
+function renderReportsView(){
+  document.getElementById('main').innerHTML = `<div id="reports-list"></div>`;
+  const list = document.getElementById('reports-list');
+  list.innerHTML = REPORTS.map(r=>{
+    const rows = r.compute();
+    return `<div class="card" data-report="${r.key}" style="cursor:pointer; display:flex; align-items:center; gap:12px;">
+      <div class="p-icon">${ICO.report}</div>
+      <div style="flex:1;"><h3 style="margin:0;">${escapeHtml(r.title)}</h3><div style="font-size:12.5px; color:var(--muted); margin-top:2px;">${rows.length} registro(s)</div></div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-report]').forEach(card=> card.addEventListener('click', ()=>openReportDetail(card.dataset.report)));
+}
+function openReportDetail(key){
+  const cfg = REPORTS.find(r=>r.key===key);
+  const rows = cfg.compute();
+  const cols = rows.length ? Object.keys(rows[0]) : [];
+  const html = `<div class="sheet-handle"></div>
+  <div class="sheet-header"><button class="icon-btn ghost" id="sheet-close">${ICO.close}</button><h2>${escapeHtml(cfg.title)}</h2></div>
+  <div class="sheet-body">
+    <button class="btn btn-primary btn-block" id="export-report-btn">${ICO.download} Exportar a Excel</button>
+    ${rows.length ? `<div style="overflow-x:auto; margin-top:14px;">
+      <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+        <thead><tr>${cols.map(c=>`<th style="text-align:left; padding:6px 8px; border-bottom:2px solid var(--border); white-space:nowrap;">${escapeHtml(c)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td style="padding:6px 8px; border-bottom:1px solid var(--border); white-space:nowrap;">${escapeHtml(r[c])}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+    </div>` : '<div class="empty-state">Sin datos para este reporte.</div>'}
+  </div>`;
+  openSheet(html, (root)=>{
+    root.querySelector('#sheet-close').addEventListener('click', closeSheet);
+    root.querySelector('#export-report-btn').addEventListener('click', ()=>exportReportXLSX(key));
+  });
+}
+function exportReportXLSX(key){
+  if(typeof XLSX === 'undefined'){ toast('No se pudo cargar el motor de Excel (sin conexión).'); return; }
+  const cfg = REPORTS.find(r=>r.key===key);
+  const rows = cfg.compute();
+  const wb = XLSX.utils.book_new();
+  const sheet = rows.length ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([['Sin datos']]);
+  XLSX.utils.book_append_sheet(wb, sheet, cfg.title.slice(0,31));
+  XLSX.writeFile(wb, `reporte_${key}_micrm.xlsx`);
+  toast('Reporte exportado');
+}
+
 /* ===================== VIEW: SETTINGS ===================== */
 function renderSettingsView(){
   const s = state.settings;
@@ -2112,7 +2210,8 @@ function render(){
   else if(currentView === 'settings') renderSettingsView();
   else if(currentView === 'properties') renderPropertiesView();
   else if(currentView === 'advisors') renderAdvisorsView();
-  document.querySelectorAll('#bottom-nav button').forEach(b=> b.classList.toggle('active', b.dataset.view===currentView || (['dashboard','documents','fields','settings','map','invoices'].includes(currentView) && b.dataset.view==='more')));
+  else if(currentView === 'reports') renderReportsView();
+  document.querySelectorAll('#bottom-nav button').forEach(b=> b.classList.toggle('active', b.dataset.view===currentView || (['dashboard','documents','fields','settings','map','invoices','reports'].includes(currentView) && b.dataset.view==='more')));
 }
 
 /* ===================== INIT ===================== */
@@ -2138,7 +2237,8 @@ window.__MICRM_TEST__ = {
   addContact, updateContact, deleteContact, findContact, go, render, uid,
   addProperty, updateProperty, deleteProperty, findProperty,
   addAdvisor, updateAdvisor, deleteAdvisor, findAdvisor,
-  STAGES, categoryFromStage, nextStageKey, stageLabel
+  STAGES, categoryFromStage, nextStageKey, stageLabel,
+  REPORTS, exportReportXLSX
 };
 
 })();
