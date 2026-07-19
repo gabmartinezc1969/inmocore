@@ -731,6 +731,17 @@ async function sha256(text){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 let pinBuffer = '';
+// Session identity: null = admin/dueño del negocio (acceso total). Set to an
+// advisor id when that advisor unlocked the app with her own PIN — this is a
+// client-side-only, soft restriction (no backend), not real security.
+let activeAdvisorId = null;
+function isAdmin(){ return !activeAdvisorId; }
+function currentAdvisor(){ return activeAdvisorId ? findAdvisor(activeAdvisorId) : null; }
+function canEditContact(c){ return isAdmin() || (c && c.advisorId === activeAdvisorId); }
+function canEditProperty(p){ return isAdmin() || (p && state.contacts.some(c=>c.propertyId===p.id && c.advisorId===activeAdvisorId)); }
+function canEditAdvisorProfile(a){ return isAdmin() || (a && a.id === activeAdvisorId); }
+function isLockEnabled(){ return !!state.settings.pinHash || state.advisors.some(a=>a.pinHash); }
+
 function buildKeypad(){
   const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
   const kp = document.getElementById('keypad');
@@ -748,16 +759,28 @@ function renderPinDots(){
 }
 async function checkPin(){
   const hash = await sha256(pinBuffer);
-  if(hash === state.settings.pinHash){
-    document.getElementById('lock-screen').classList.add('hidden');
-    document.getElementById('app').classList.remove('hidden');
-    pinBuffer = '';
-  } else {
-    const ls = document.getElementById('lock-screen');
-    ls.classList.add('shake');
-    setTimeout(()=>{ ls.classList.remove('shake'); pinBuffer=''; renderPinDots(); }, 380);
-    toast('PIN incorrecto');
+  if(state.settings.pinHash && hash === state.settings.pinHash){
+    activeAdvisorId = null;
+    unlockApp();
+    return;
   }
+  const matchedAdvisor = state.advisors.find(a=>a.pinHash && a.pinHash === hash);
+  if(matchedAdvisor){
+    activeAdvisorId = matchedAdvisor.id;
+    unlockApp();
+    toast('Sesión de ' + matchedAdvisor.name);
+    return;
+  }
+  const ls = document.getElementById('lock-screen');
+  ls.classList.add('shake');
+  setTimeout(()=>{ ls.classList.remove('shake'); pinBuffer=''; renderPinDots(); }, 380);
+  toast('PIN incorrecto');
+}
+function unlockApp(){
+  document.getElementById('lock-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  pinBuffer = '';
+  render();
 }
 async function tryWebAuthn(){
   if(!window.PublicKeyCredential) return;
@@ -807,9 +830,10 @@ function renderHeader(){
       </div>
       <div class="chips-row" id="stage-filter-row"></div>`;
   }
-  hd.innerHTML = `<div class="hd-row"><div><h1>${titles[currentView]||'MiCRM'}</h1><div class="sub">${escapeHtml(state.settings.businessName)}</div></div>
+  const subLabel = currentAdvisor() ? `${escapeHtml(state.settings.businessName)} · ${escapeHtml(currentAdvisor().name)}` : escapeHtml(state.settings.businessName);
+  hd.innerHTML = `<div class="hd-row"><div><h1>${titles[currentView]||'MiCRM'}</h1><div class="sub">${subLabel}</div></div>
     <button class="icon-btn" id="btn-lock-now" title="Bloquear">${ICO.lock}</button></div>${extra}`;
-  document.getElementById('btn-lock-now').addEventListener('click', ()=>{ if(state.settings.pinHash) showLockScreen(); else toast('No has configurado un PIN'); });
+  document.getElementById('btn-lock-now').addEventListener('click', ()=>{ if(isLockEnabled()) showLockScreen(); else toast('No has configurado un PIN'); });
   if(currentView === 'contacts'){
     document.getElementById('contact-search').addEventListener('input', (e)=>{ uiState.contactSearch = e.target.value; renderContactsList(); });
     document.getElementById('btn-open-filters').addEventListener('click', openContactFiltersSheet);
@@ -866,7 +890,7 @@ const FAB_CONFIG = {
 function renderFab(){
   const fab = document.getElementById('fab-main');
   const cfg = FAB_CONFIG[currentView];
-  if(!cfg){ fab.classList.add('hidden'); return; }
+  if(!cfg || (currentView==='advisors' && !isAdmin())){ fab.classList.add('hidden'); return; }
   fab.classList.remove('hidden');
   fab.innerHTML = cfg.icon;
   fab.onclick = cfg.action;
@@ -932,6 +956,7 @@ function fieldTypeInput(f, value){
 }
 function openContactForm(contactId){
   const c = contactId ? findContact(contactId) : null;
+  if(c && !canEditContact(c)){ toast('Este contacto está asignado a otra asesora; no puedes editarlo.'); return; }
   const phones = c ? c.phones.slice() : [{id:uid(), label:'Móvil', number:''}];
   const emails = c ? c.emails.slice() : [{id:uid(), label:'Trabajo', email:''}];
   const html = `
@@ -947,7 +972,8 @@ function openContactForm(contactId){
       <select name="stage">${STAGES.map(s=>`<option value="${s.key}" ${(c?c.stage:'nuevo')===s.key?'selected':''}>${escapeHtml(s.label)}</option>`).join('')}</select>
 
       <label>Asesora asignada</label>
-      <select name="advisorId"><option value="">Sin asignar</option>${state.advisors.map(a=>`<option value="${a.id}" ${c&&c.advisorId===a.id?'selected':''}>${escapeHtml(a.name)}</option>`).join('')}</select>
+      ${isAdmin() ? `<select name="advisorId"><option value="">Sin asignar</option>${state.advisors.map(a=>`<option value="${a.id}" ${c&&c.advisorId===a.id?'selected':''}>${escapeHtml(a.name)}</option>`).join('')}</select>`
+        : `<input value="${escapeHtml(currentAdvisor()?currentAdvisor().name:'')}" disabled><input type="hidden" name="advisorId" value="${activeAdvisorId}">`}
 
       <label>Propiedad de interés</label>
       <select name="propertyId"><option value="">Sin propiedad</option>${state.properties.map(p=>`<option value="${p.id}" ${c&&c.propertyId===p.id?'selected':''}>${escapeHtml(p.name)} (${escapeHtml(p.type)} · ${escapeHtml(p.transaction)})</option>`).join('')}</select>
@@ -1101,13 +1127,15 @@ function renderContactDetail(){
   const c = findContact(uiState.contactDetailId);
   const root = document.getElementById('contact-detail');
   if(!c){ closeContactDetail(); return; }
+  const editable = canEditContact(c);
   root.innerHTML = `
   <div class="overlay-header">
     <button class="icon-btn ghost" id="cd-back">${ICO.back}</button>
     <h2>${escapeHtml(c.name)}</h2>
-    <button class="icon-btn ghost" id="cd-edit">${ICO.edit}</button>
+    ${editable ? `<button class="icon-btn ghost" id="cd-edit">${ICO.edit}</button>` : `<div style="width:38px;"></div>`}
   </div>
   <div class="overlay-body">
+    ${!editable ? `<div class="card" style="font-size:12.5px; color:var(--muted);">Este contacto está asignado a otra asesora. Puedes verlo, pero no editarlo.</div>` : ''}
     <div class="card" style="display:flex; align-items:center; gap:12px;">
       <div class="avatar" style="background:${c.avatarColor}; width:58px;height:58px;font-size:20px;">${initials(c.name)}</div>
       <div>
@@ -1120,21 +1148,21 @@ function renderContactDetail(){
       <div class="stage-track" id="cd-stage-track"></div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
         <div style="font-size:12.5px; color:var(--muted);">Próximo seguimiento</div>
-        <input type="date" id="cd-nextfollowup" value="${c.nextFollowUp?c.nextFollowUp.slice(0,10):''}" style="width:auto;">
+        <input type="date" id="cd-nextfollowup" value="${c.nextFollowUp?c.nextFollowUp.slice(0,10):''}" style="width:auto;" ${editable?'':'disabled'}>
       </div>
-      ${(c.stage!=='cerrado' && c.stage!=='perdido') ? `<button class="btn btn-primary btn-block" id="cd-advance-stage" style="margin-top:10px;">${ICO.forward} Avanzar a "${escapeHtml(stageInfo(nextStageKey(c.stage)).label)}"</button>` : ''}
+      ${(editable && c.stage!=='cerrado' && c.stage!=='perdido') ? `<button class="btn btn-primary btn-block" id="cd-advance-stage" style="margin-top:10px;">${ICO.forward} Avanzar a "${escapeHtml(stageInfo(nextStageKey(c.stage)).label)}"</button>` : ''}
       <div style="display:flex; gap:16px; margin-top:12px; font-size:12.5px; color:var(--muted);">
         <div>Asesora: <b style="color:var(--text);">${escapeHtml(advisorLabel(c.advisorId)||'Sin asignar')}</b></div>
       </div>
       ${c.propertyId ? `<div id="cd-property-link" style="margin-top:8px; cursor:pointer;"><span class="chip" style="background:var(--primary1);">${escapeHtml(propertyLabel(c.propertyId))}</span></div>` : ''}
     </div>
-    <div class="row-actions">
+    ${editable ? `<div class="row-actions">
       <div class="qa" data-qa="reunion"><div class="circ">${ICO.cal}</div>Reunión</div>
       <div class="qa" data-qa="tarea"><div class="circ">${ICO.check}</div>Tarea</div>
       <div class="qa" data-qa="voz"><div class="circ">${ICO.mic}</div>Voz</div>
       <div class="qa" data-qa="nota"><div class="circ">${ICO.note}</div>Nota</div>
       <div class="qa" data-qa="editar"><div class="circ">${ICO.edit}</div>Editar</div>
-    </div>
+    </div>` : ''}
     <div class="tabs" id="cd-tabs">
       <button data-tab="contacto" class="${uiState.contactDetailTab==='contacto'?'active':''}">Contacto</button>
       <button data-tab="actividad" class="${uiState.contactDetailTab==='actividad'?'active':''}">Actividad</button>
@@ -1144,10 +1172,11 @@ function renderContactDetail(){
     <div id="cd-tab-content"></div>
   </div>`;
   root.querySelector('#cd-back').addEventListener('click', closeContactDetail);
-  root.querySelector('#cd-edit').addEventListener('click', ()=>openContactForm(c.id));
+  const editBtn = root.querySelector('#cd-edit');
+  if(editBtn) editBtn.addEventListener('click', ()=>openContactForm(c.id));
   root.querySelectorAll('#cd-tabs button').forEach(b=> b.addEventListener('click', ()=>{ uiState.contactDetailTab = b.dataset.tab; renderContactDetail(); }));
   root.querySelectorAll('.qa').forEach(qa=> qa.addEventListener('click', ()=>handleQuickAction(qa.dataset.qa, c)));
-  renderStageTrack(root, c);
+  renderStageTrack(root, c, editable);
   root.querySelector('#cd-nextfollowup').addEventListener('change', (e)=>{
     updateContact(c.id, {nextFollowUp: e.target.value || null});
     toast('Próximo seguimiento actualizado');
@@ -1163,13 +1192,14 @@ function renderContactDetail(){
   if(propLink) propLink.addEventListener('click', ()=>openPropertyForm(c.propertyId));
   renderContactDetailTab(c);
 }
-function renderStageTrack(root, c){
+function renderStageTrack(root, c, editable){
   const track = root.querySelector('#cd-stage-track');
   if(!track) return;
   const stages = STAGES.filter(s=>s.key!=='perdido');
   const curIdx = stages.findIndex(s=>s.key===(c.stage||'nuevo'));
   track.innerHTML = stages.map((s,i)=>`<button class="st-btn ${i<=curIdx?'done':''} ${i===curIdx?'current':''}" data-stage="${s.key}" style="background:${s.color}">${escapeHtml(s.label)}</button>`).join('')
     + (c.stage==='perdido' ? `<button class="st-btn current" data-stage="perdido" style="background:${stageInfo('perdido').color}">Perdido</button>` : `<button class="st-btn" data-stage="perdido" style="background:${stageInfo('perdido').color}; opacity:.35;">Perdido</button>`);
+  if(!editable){ track.style.opacity = '.75'; track.style.pointerEvents = 'none'; return; }
   track.querySelectorAll('.st-btn').forEach(btn=> btn.addEventListener('click', ()=>{
     const ns = btn.dataset.stage;
     updateContact(c.id, {stage: ns, category: categoryFromStage(ns)});
@@ -1840,24 +1870,31 @@ function renderPropertiesList(){
 }
 function openPropertyForm(propertyId){
   const p = propertyId ? findProperty(propertyId) : null;
+  const editable = p ? canEditProperty(p) : true;
   const interested = p ? state.contacts.filter(c=>c.propertyId===p.id) : [];
   const assignedAdvisors = p ? [...new Set(interested.map(c=>c.advisorId).filter(Boolean))].map(findAdvisor).filter(Boolean) : [];
+  const dis = editable ? '' : 'disabled';
   const html = `<div class="sheet-handle"></div>
-  <div class="sheet-header"><button class="icon-btn ghost" id="sheet-close">${ICO.close}</button><h2>${p?'Editar propiedad':'Nueva propiedad'}</h2></div>
+  <div class="sheet-header"><button class="icon-btn ghost" id="sheet-close">${ICO.close}</button><h2>${p?(editable?'Editar propiedad':'Ver propiedad'):'Nueva propiedad'}</h2></div>
   <div class="sheet-body">
-    <label>Nombre</label><input id="prop-name" value="${escapeHtml(p?p.name:'')}">
-    <label>Tipo</label><select id="prop-type">${PROPERTY_TYPES.map(t=>`<option ${p&&p.type===t?'selected':''}>${t}</option>`).join('')}</select>
-    <label>Transacción</label><select id="prop-transaction">${PROPERTY_TRANSACTIONS.map(t=>`<option ${p&&p.transaction===t?'selected':''}>${t}</option>`).join('')}</select>
-    <label>Dirección</label><input id="prop-address" value="${escapeHtml(p?p.address:'')}">
-    <label>Precio</label><input type="number" id="prop-price" min="0" step="0.01" value="${p&&p.price!=null?p.price:''}">
-    <label>Estatus</label><select id="prop-status">${PROPERTY_STATUSES.map(s=>`<option ${p&&p.status===s?'selected':''}>${s}</option>`).join('')}</select>
-    <button class="btn btn-primary btn-block" id="save-property" style="margin-top:14px;">Guardar</button>
-    ${p?`<button type="button" class="btn btn-danger btn-block" style="margin-top:10px;" id="delete-property-btn">Eliminar propiedad</button>`:''}
+    ${p&&!editable ? `<div class="card" style="font-size:12.5px; color:var(--muted);">Solo puedes ver esta propiedad; ninguno de tus contactos está interesado en ella.</div>` : ''}
+    <label>Nombre</label><input id="prop-name" value="${escapeHtml(p?p.name:'')}" ${dis}>
+    <label>Tipo</label><select id="prop-type" ${dis}>${PROPERTY_TYPES.map(t=>`<option ${p&&p.type===t?'selected':''}>${t}</option>`).join('')}</select>
+    <label>Transacción</label><select id="prop-transaction" ${dis}>${PROPERTY_TRANSACTIONS.map(t=>`<option ${p&&p.transaction===t?'selected':''}>${t}</option>`).join('')}</select>
+    <label>Dirección</label><input id="prop-address" value="${escapeHtml(p?p.address:'')}" ${dis}>
+    <label>Precio</label><input type="number" id="prop-price" min="0" step="0.01" value="${p&&p.price!=null?p.price:''}" ${dis}>
+    <label>Estatus</label><select id="prop-status" ${dis}>${PROPERTY_STATUSES.map(s=>`<option ${p&&p.status===s?'selected':''}>${s}</option>`).join('')}</select>
+    ${editable?`<button class="btn btn-primary btn-block" id="save-property" style="margin-top:14px;">Guardar</button>`:''}
+    ${p&&editable?`<button type="button" class="btn btn-danger btn-block" style="margin-top:10px;" id="delete-property-btn">Eliminar propiedad</button>`:''}
     ${p?`<div style="margin-top:16px;"><label>Asesora(s) asignada(s)</label>${assignedAdvisors.length ? `<div class="color-swatches">` + assignedAdvisors.map(a=>`<span class="chip" style="background:${a.color}">${escapeHtml(a.name)}</span>`).join('') + `</div>` : '<div style="font-size:12.5px; color:var(--muted);">Ninguna asesora tiene contactos asignados a esta propiedad.</div>'}</div>` : ''}
     ${p&&interested.length?`<div style="margin-top:16px;"><label>Contactos interesados (${interested.length})</label>` + interested.map(c=>`<div class="contact-row" data-cid="${c.id}" style="cursor:pointer;"><div class="avatar" style="background:${c.avatarColor}">${initials(c.name)}</div><div class="contact-main"><div class="cname">${escapeHtml(c.name)}</div><div class="csub">${escapeHtml(stageLabel(c.stage||'nuevo'))}${c.advisorId?(' · '+escapeHtml(advisorLabel(c.advisorId))):''}</div></div></div>`).join('') + `</div>` : ''}
   </div>`;
   openSheet(html, (root)=>{
     root.querySelector('#sheet-close').addEventListener('click', closeSheet);
+    if(!editable){
+      root.querySelectorAll('[data-cid]').forEach(row=> row.addEventListener('click', ()=>{ closeSheet(); openContactDetail(row.dataset.cid); }));
+      return;
+    }
     root.querySelector('#save-property').addEventListener('click', ()=>{
       const name = root.querySelector('#prop-name').value.trim();
       if(!name){ toast('Escribe un nombre'); return; }
@@ -1903,22 +1940,38 @@ function renderAdvisorsView(){
 }
 function openAdvisorForm(advisorId){
   const a = advisorId ? findAdvisor(advisorId) : null;
+  if(!a && !isAdmin()){ toast('Solo el administrador puede crear asesoras'); return; }
+  const editable = a ? canEditAdvisorProfile(a) : true;
   const assigned = a ? state.contacts.filter(c=>c.advisorId===a.id) : [];
   const assignedProperties = a ? [...new Set(assigned.map(c=>c.propertyId).filter(Boolean))].map(findProperty).filter(Boolean) : [];
+  const dis = editable ? '' : 'disabled';
   const html = `<div class="sheet-handle"></div>
-  <div class="sheet-header"><button class="icon-btn ghost" id="sheet-close">${ICO.close}</button><h2>${a?'Editar asesora':'Nueva asesora'}</h2></div>
+  <div class="sheet-header"><button class="icon-btn ghost" id="sheet-close">${ICO.close}</button><h2>${a?(editable?'Editar asesora':'Ver asesora'):'Nueva asesora'}</h2></div>
   <div class="sheet-body">
-    <label>Nombre</label><input id="adv-name" value="${escapeHtml(a?a.name:'')}">
-    <label>Color</label><div class="color-swatches" id="adv-colors">${GROUP_COLORS.map((c,i)=>`<div class="color-dot ${(a?a.color===c:i===0)?'selected':''}" data-color="${c}" style="background:${c}"></div>`).join('')}</div>
-    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;"><input type="checkbox" id="adv-active" style="width:auto;" ${!a||a.active!==false?'checked':''}> Activa</label>
-    <button class="btn btn-primary btn-block" id="save-advisor" style="margin-top:14px;">Guardar</button>
-    ${a?`<button type="button" class="btn btn-danger btn-block" style="margin-top:10px;" id="delete-advisor-btn">Eliminar asesora</button>`:''}
+    ${!editable ? `<div class="card" style="font-size:12.5px; color:var(--muted);">Solo puedes ver este perfil; no te pertenece.</div>` : ''}
+    <label>Nombre</label><input id="adv-name" value="${escapeHtml(a?a.name:'')}" ${dis}>
+    <label>Color</label><div class="color-swatches" id="adv-colors">${GROUP_COLORS.map((c,i)=>`<div class="color-dot ${(a?a.color===c:i===0)?'selected':''}" data-color="${c}" style="background:${c}${editable?'':';pointer-events:none;opacity:.6'}"></div>`).join('')}</div>
+    <label style="display:flex; align-items:center; gap:8px; margin-top:8px;"><input type="checkbox" id="adv-active" style="width:auto;" ${!a||a.active!==false?'checked':''} ${dis}> Activa</label>
+    ${editable ? `<button class="btn btn-primary btn-block" id="save-advisor" style="margin-top:14px;">Guardar</button>` : ''}
+    ${a&&editable?`<button type="button" class="btn btn-danger btn-block" style="margin-top:10px;" id="delete-advisor-btn">Eliminar asesora</button>`:''}
+    ${a&&editable?`<div class="card" style="margin-top:16px;"><h3>PIN de acceso</h3>
+      <div style="font-size:12.5px; color:var(--muted); margin-bottom:8px;">${a.pinHash?'Configurado. Con este PIN, '+escapeHtml(a.name)+' entra a la app y solo puede editar sus propios contactos y propiedades asignadas.':'Sin configurar. '+escapeHtml(a.name)+' no puede iniciar sesión propia hasta tener un PIN.'}</div>
+      <label>Nuevo PIN (4 dígitos)</label><input id="adv-pin1" maxlength="4" inputmode="numeric" type="password">
+      <label>Confirmar PIN</label><input id="adv-pin2" maxlength="4" inputmode="numeric" type="password">
+      <button type="button" class="btn btn-outline btn-block" id="save-advisor-pin" style="margin-top:10px;">${a.pinHash?'Cambiar PIN':'Configurar PIN'}</button>
+      ${a.pinHash?`<button type="button" class="btn btn-outline btn-block" id="remove-advisor-pin" style="margin-top:8px;">Quitar PIN</button>`:''}
+    </div>` : ''}
     ${a?`<div style="margin-top:16px;"><label>Propiedades asignadas (${assignedProperties.length})</label>${assignedProperties.length ? assignedProperties.map(p=>`<div class="property-row" data-pid="${p.id}" style="cursor:pointer;"><div class="p-icon">${ICO.building}</div><div class="p-main"><div class="p-name">${escapeHtml(p.name)}</div><div class="p-sub">${escapeHtml(p.type)} · ${escapeHtml(p.transaction)}</div></div><span class="status-badge status-${(p.status||'').toLowerCase()}">${escapeHtml(p.status||'')}</span></div>`).join('') : '<div style="font-size:12.5px; color:var(--muted);">Sin propiedades asignadas a los contactos de esta asesora.</div>'}</div>` : ''}
     ${a&&assigned.length?`<div style="margin-top:16px;"><label>Contactos asignados (${assigned.length})</label>` + assigned.map(c=>`<div class="contact-row" data-cid="${c.id}" style="cursor:pointer;"><div class="avatar" style="background:${c.avatarColor}">${initials(c.name)}</div><div class="contact-main"><div class="cname">${escapeHtml(c.name)}</div><div class="csub">${escapeHtml(stageLabel(c.stage||'nuevo'))}</div></div></div>`).join('') + `</div>` : ''}
   </div>`;
   let selColor = a ? a.color : GROUP_COLORS[0];
   openSheet(html, (root)=>{
     root.querySelector('#sheet-close').addEventListener('click', closeSheet);
+    if(!editable){
+      root.querySelectorAll('[data-pid]').forEach(row=> row.addEventListener('click', ()=>openPropertyForm(row.dataset.pid)));
+      root.querySelectorAll('[data-cid]').forEach(row=> row.addEventListener('click', ()=>{ closeSheet(); openContactDetail(row.dataset.cid); }));
+      return;
+    }
     root.querySelectorAll('.color-dot').forEach(d=> d.addEventListener('click', ()=>{ root.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('selected')); d.classList.add('selected'); selColor=d.dataset.color; }));
     root.querySelector('#save-advisor').addEventListener('click', ()=>{
       const name = root.querySelector('#adv-name').value.trim();
@@ -1933,6 +1986,16 @@ function openAdvisorForm(advisorId){
         deleteAdvisor(a.id); closeSheet(); render();
       });
     });
+    if(a){
+      root.querySelector('#save-advisor-pin').addEventListener('click', async ()=>{
+        const p1 = root.querySelector('#adv-pin1').value, p2 = root.querySelector('#adv-pin2').value;
+        if(!/^\d{4}$/.test(p1)){ toast('El PIN debe tener 4 dígitos'); return; }
+        if(p1 !== p2){ toast('Los PIN no coinciden'); return; }
+        updateAdvisor(a.id, {pinHash: await sha256(p1)}); toast('PIN de asesora configurado'); closeSheet(); render();
+      });
+      const rmPin = root.querySelector('#remove-advisor-pin');
+      if(rmPin) rmPin.addEventListener('click', ()=>{ updateAdvisor(a.id, {pinHash:null}); toast('PIN eliminado'); closeSheet(); render(); });
+    }
     root.querySelectorAll('[data-pid]').forEach(row=> row.addEventListener('click', ()=>openPropertyForm(row.dataset.pid)));
     root.querySelectorAll('[data-cid]').forEach(row=> row.addEventListener('click', ()=>{ closeSheet(); openContactDetail(row.dataset.cid); }));
   });
@@ -2101,63 +2164,67 @@ function exportReportXLSX(key){
 /* ===================== VIEW: SETTINGS ===================== */
 function renderSettingsView(){
   const s = state.settings;
+  const admin = isAdmin();
   document.getElementById('main').innerHTML = `
-    <div class="card"><h3>Negocio</h3>
+    ${!admin ? `<div class="card"><h3>Sesión de asesora</h3><div style="font-size:12.5px; color:var(--muted);">Entraste como <b style="color:var(--text);">${escapeHtml(currentAdvisor()?currentAdvisor().name:'')}</b>. Los ajustes del negocio, el PIN maestro, el archivo de respaldo y el borrado de datos solo puede modificarlos el administrador.</div></div>` : ''}
+    ${admin ? `<div class="card"><h3>Negocio</h3>
       <label>Nombre del negocio</label><input id="set-bizname" value="${escapeHtml(s.businessName)}">
       <label>Datos fiscales</label><input id="set-taxid" value="${escapeHtml(s.taxId)}">
       <label>Logotipo</label><input type="file" id="set-logo" accept="image/*">
       <label>Moneda</label><select id="set-currency">${['MXN','USD','EUR'].map(c=>`<option ${s.currency===c?'selected':''}>${c}</option>`).join('')}</select>
       <label>IVA por defecto (%)</label><input type="number" id="set-iva" value="${s.ivaRate}">
       <button class="btn btn-primary btn-block" id="save-biz" style="margin-top:12px;">Guardar</button>
-    </div>
+    </div>` : ''}
     <div class="card">
       <div class="settings-item"><div><div class="label-txt">Tema oscuro</div></div><div class="switch ${s.theme==='dark'?'on':''}" id="theme-switch"><div class="knob"></div></div></div>
-      <div class="settings-item"><div><div class="label-txt">Bloqueo por PIN</div><div class="desc-txt">${s.pinHash?'Activado':'Desactivado'}</div></div><button class="btn btn-outline btn-sm" id="pin-btn">${s.pinHash?'Cambiar':'Configurar'}</button></div>
-      <div class="settings-item"><div><div class="label-txt">Archivo de respaldo</div><div class="desc-txt">${s.backupFileName?('Vinculado: '+escapeHtml(s.backupFileName)):'No vinculado'}</div></div><button class="btn btn-outline btn-sm" id="link-backup-btn">Vincular</button></div>
+      ${admin ? `<div class="settings-item"><div><div class="label-txt">Bloqueo por PIN</div><div class="desc-txt">${s.pinHash?'Activado':'Desactivado'}</div></div><button class="btn btn-outline btn-sm" id="pin-btn">${s.pinHash?'Cambiar':'Configurar'}</button></div>
+      <div class="settings-item"><div><div class="label-txt">Archivo de respaldo</div><div class="desc-txt">${s.backupFileName?('Vinculado: '+escapeHtml(s.backupFileName)):'No vinculado'}</div></div><button class="btn btn-outline btn-sm" id="link-backup-btn">Vincular</button></div>` : ''}
     </div>
     <div class="card"><h3>Datos</h3>
       <button class="btn btn-outline btn-block" id="export-json">Exportar todo (JSON)</button>
-      <input type="file" id="import-json-input" accept="application/json" class="hidden">
-      <button class="btn btn-outline btn-block" id="import-json" style="margin-top:10px;">Importar (JSON)</button>
+      ${admin ? `<input type="file" id="import-json-input" accept="application/json" class="hidden">
+      <button class="btn btn-outline btn-block" id="import-json" style="margin-top:10px;">Importar (JSON)</button>` : ''}
       <button class="btn btn-outline btn-block" id="export-xlsx" style="margin-top:10px;">Exportar todo (Excel)</button>
       <button class="btn btn-outline btn-block" id="export-contacts-csv" style="margin-top:10px;">Exportar contactos (CSV)</button>
-      <button class="btn btn-danger btn-block" id="wipe-data" style="margin-top:10px;">Borrar todos los datos</button>
+      ${admin ? `<button class="btn btn-danger btn-block" id="wipe-data" style="margin-top:10px;">Borrar todos los datos</button>` : ''}
     </div>`;
-  document.getElementById('save-biz').addEventListener('click', async ()=>{
-    s.businessName = document.getElementById('set-bizname').value.trim() || 'Mi Negocio';
-    s.taxId = document.getElementById('set-taxid').value.trim();
-    s.currency = document.getElementById('set-currency').value;
-    s.ivaRate = parseFloat(document.getElementById('set-iva').value)||0;
-    const logoFile = document.getElementById('set-logo').files[0];
-    if(logoFile){ s.logo = await fileToDataUrl(logoFile); }
-    persist('settings'); toast('Ajustes guardados'); render();
-  });
+  if(admin){
+    document.getElementById('save-biz').addEventListener('click', async ()=>{
+      s.businessName = document.getElementById('set-bizname').value.trim() || 'Mi Negocio';
+      s.taxId = document.getElementById('set-taxid').value.trim();
+      s.currency = document.getElementById('set-currency').value;
+      s.ivaRate = parseFloat(document.getElementById('set-iva').value)||0;
+      const logoFile = document.getElementById('set-logo').files[0];
+      if(logoFile){ s.logo = await fileToDataUrl(logoFile); }
+      persist('settings'); toast('Ajustes guardados'); render();
+    });
+    document.getElementById('pin-btn').addEventListener('click', openPinSetup);
+    document.getElementById('link-backup-btn').addEventListener('click', linkBackupFile);
+    document.getElementById('import-json').addEventListener('click', ()=> document.getElementById('import-json-input').click());
+    document.getElementById('import-json-input').addEventListener('change', (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        try{ importAllData(JSON.parse(reader.result)); toast('Datos importados'); applyTheme(); render(); }
+        catch(err){ toast('Archivo inválido'); }
+      };
+      reader.readAsText(file);
+    });
+    document.getElementById('wipe-data').addEventListener('click', ()=>{
+      confirmDialog('¿Borrar TODOS los datos? Esta acción no se puede deshacer.', ()=>{
+        confirmDialog('Confirma nuevamente: se eliminará todo permanentemente.', ()=>{
+          Object.values(LS).forEach(k=>localStorage.removeItem(k));
+          location.reload();
+        });
+      });
+    });
+  }
   document.getElementById('theme-switch').addEventListener('click', ()=>{
     s.theme = s.theme==='dark' ? 'light' : 'dark'; persist('settings'); applyTheme(); render();
   });
-  document.getElementById('pin-btn').addEventListener('click', openPinSetup);
-  document.getElementById('link-backup-btn').addEventListener('click', linkBackupFile);
   document.getElementById('export-json').addEventListener('click', ()=> downloadFile('micrm_datos.json', JSON.stringify(exportAllData(), null, 2), 'application/json'));
   document.getElementById('export-xlsx').addEventListener('click', exportAllDataXLSX);
   document.getElementById('export-contacts-csv').addEventListener('click', exportContactsCSV);
-  document.getElementById('import-json').addEventListener('click', ()=> document.getElementById('import-json-input').click());
-  document.getElementById('import-json-input').addEventListener('change', (e)=>{
-    const file = e.target.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ()=>{
-      try{ importAllData(JSON.parse(reader.result)); toast('Datos importados'); applyTheme(); render(); }
-      catch(err){ toast('Archivo inválido'); }
-    };
-    reader.readAsText(file);
-  });
-  document.getElementById('wipe-data').addEventListener('click', ()=>{
-    confirmDialog('¿Borrar TODOS los datos? Esta acción no se puede deshacer.', ()=>{
-      confirmDialog('Confirma nuevamente: se eliminará todo permanentemente.', ()=>{
-        Object.values(LS).forEach(k=>localStorage.removeItem(k));
-        location.reload();
-      });
-    });
-  });
 }
 function fileToDataUrl(file){ return new Promise((res)=>{ const r = new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); }); }
 function openPinSetup(){
@@ -2219,7 +2286,7 @@ async function init(){
   seedIfEmpty();
   applyTheme();
   await tryRestoreBackupHandle();
-  if(state.settings.pinHash){ showLockScreen(); }
+  if(isLockEnabled()){ showLockScreen(); }
   else { document.getElementById('app').classList.remove('hidden'); }
   go('contacts');
 }
@@ -2238,7 +2305,12 @@ window.__MICRM_TEST__ = {
   addProperty, updateProperty, deleteProperty, findProperty,
   addAdvisor, updateAdvisor, deleteAdvisor, findAdvisor,
   STAGES, categoryFromStage, nextStageKey, stageLabel,
-  REPORTS, exportReportXLSX
+  REPORTS, exportReportXLSX,
+  isAdmin, canEditContact, canEditProperty, canEditAdvisorProfile, isLockEnabled,
+  sha256, checkPin, showLockScreen,
+  getActiveAdvisorId: () => activeAdvisorId,
+  setActiveAdvisorId: (id) => { activeAdvisorId = id; },
+  setPinBuffer: (v) => { pinBuffer = v; }
 };
 
 })();
