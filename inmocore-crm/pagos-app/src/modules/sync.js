@@ -112,7 +112,10 @@ export async function pullFromFile(silent) {
   }
   applyAppData(data);
   loadLedger();
-  if (!silent) onDirty('Datos actualizados desde el archivo conectado');
+  // Always signal dataChanged (even when silent) so the currently visible
+  // view re-renders with the new numbers instead of showing stale data
+  // until the user happens to navigate elsewhere.
+  onDirty(silent ? null : 'Datos actualizados desde el archivo conectado', { dataChanged: true });
 }
 export async function pickOrCreateSyncFile() {
   if (!window.showSaveFilePicker) {
@@ -233,7 +236,9 @@ export async function cloudPull(silent) {
     }
     applyAppData(data);
     loadLedger();
-    if (!silent) onDirty('Datos traídos desde la nube');
+    // Always signal dataChanged (even when silent) so the currently visible
+    // view re-renders instead of showing stale data until the user navigates.
+    onDirty(silent ? null : 'Datos traídos desde la nube', { dataChanged: true });
     return true;
   } catch {
     cloudState.lastError = 'No se pudo leer la nube';

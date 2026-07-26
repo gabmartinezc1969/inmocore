@@ -258,13 +258,17 @@ export function initAppHeader() {
 }
 
 // sync.js can't import ui.js (would be circular); it calls this instead whenever
-// something changes that the header/status panels need to reflect.
-sync.onSyncDirty((message) => {
+// something changes that the header/status panels need to reflect. When data
+// was actually pulled in from an external source (OneDrive file or cloud —
+// including the *silent* background pulls on load/reconnect), also
+// re-render whatever view is on screen so it never shows stale numbers.
+sync.onSyncDirty((message, opts) => {
   if (typeof message === 'string' && message) toast(message);
   refreshHeaderSyncFromState();
   document.getElementById('syncStatus') && renderSyncStatusPanel();
   document.getElementById('cloudStatus') && renderCloudStatusPanel();
   document.getElementById('backupStatus') && renderBackupStatusPanel();
+  if (opts && opts.dataChanged) renderAllTabsSoft();
 });
 
 export function renderSyncStatusPanel() {
