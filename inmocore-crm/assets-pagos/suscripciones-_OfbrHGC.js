@@ -1,4 +1,4 @@
-import{k as d,s as o,b as e,q as i,p as l,K as n,g as r,x as m}from"./pagos-CfuwYeG-.js";import{d as u}from"./charts-D8ecBF4s.js";function h(){const t=d(),c=o(t,"promedio");document.getElementById("subCards").innerHTML=`
+import{k as d,s as o,b as e,q as i,p as l,K as n,g as r,x as m}from"./pagos-B5CS2MVF.js";import{d as u}from"./charts-C4tXnup2.js";function h(){const t=d(),c=o(t,"promedio");document.getElementById("subCards").innerHTML=`
     <div class="card"><div class="label">Suscripciones detectadas</div><div class="value">${t.length}</div></div>
     <div class="card"><div class="label">Costo mensual estimado</div><div class="value neg">${e(c)}</div></div>
     <div class="card"><div class="label">Costo anual estimado</div><div class="value neg">${e(c*12)}</div></div>

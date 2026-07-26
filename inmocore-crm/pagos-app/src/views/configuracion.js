@@ -268,7 +268,7 @@ function wireSyncButtons() {
   document.getElementById('inputImportJSON')?.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
-      sync.importDataJSON(file).then(() => toast('Datos importados correctamente')).catch((err) => toast(err.message));
+      sync.importDataJSON(file).then(() => { toast('Datos importados correctamente'); renderView(activeViewName()); }).catch((err) => toast(err.message));
     }
     e.target.value = '';
   });
@@ -278,6 +278,7 @@ function wireSyncButtons() {
     if (!confirm(`¿Restaurar el respaldo del ${new Date(info.at).toLocaleString('es-MX')} (${info.data.ledger.length} movimientos)? Reemplazará tus datos actuales.`)) return;
     sync.restoreAutoBackup();
     toast('Respaldo restaurado');
+    renderView(activeViewName());
   });
   document.getElementById('btnCloudCreate')?.addEventListener('click', async () => {
     const id = await sync.cloudCreate();
