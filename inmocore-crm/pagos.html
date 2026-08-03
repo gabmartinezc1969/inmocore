@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets-pagos/pagos-B5CS2MVF.js"></script>
+  <script type="module" crossorigin src="./assets-pagos/pagos-ByLpTsXd.js"></script>
   <link rel="stylesheet" crossorigin href="./assets-pagos/pagos-CanrVvrU.css">
 </head>
 <body>
@@ -508,17 +508,8 @@
 
       <div class="panel">
         <h3>Sincronización y Respaldo</h3>
-        <div class="panel-sub">Guarda tus datos en un archivo separado de la aplicación, para que sobrevivan a cualquier actualización y puedas llevarlos entre tu laptop y tu celular vía OneDrive.</div>
-        <div id="syncStatus" style="margin:12px 0;font-size:.86rem;"></div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn emerald" id="btnSyncConnect">Conectar archivo (guarda dentro de tu carpeta OneDrive)</button>
-          <button class="btn emerald" id="btnSyncReconnect" style="display:none;">Reconectar archivo</button>
-          <button class="btn ghost" id="btnSyncNow" style="display:none;">Sincronizar ahora</button>
-          <button class="btn ghost" id="btnSyncDisconnect" style="display:none;">Desconectar</button>
-        </div>
-        <div style="border-top:1px solid var(--line);margin:16px 0 14px;"></div>
-        <div class="panel-sub" style="margin-bottom:6px;"><strong style="color:var(--text);">Nube anónima (funciona también en celular).</strong> Guarda tus datos en un espacio en línea sin crear ninguna cuenta: la app genera un código de sincronización que ingresas en tu otro dispositivo y ambos quedan conectados.</div>
-        <div class="panel-sub" style="margin-bottom:10px;">⚠️ Considera: los datos viajan a un servicio gratuito de terceros (jsonblob.com); cualquiera que conozca tu código podría leerlos, y el espacio se elimina tras ~30 días sin uso. Para máxima privacidad usa el archivo en OneDrive.</div>
+        <div class="panel-sub" style="margin-bottom:6px;"><strong style="color:var(--text);">Nube automática — funciona igual en laptop y celular.</strong> Al abrir la app por primera vez en un dispositivo sin nube conectada, se crea sola (sin botones) y queda sincronizada de inmediato en cada apertura. Para sumar un segundo dispositivo (p. ej. tu celular), copia el código que aparece abajo y pégalo ahí una sola vez con "Conectar con un código" — de ahí en adelante ambos se actualizan solos.</div>
+        <div class="panel-sub" style="margin-bottom:10px;">⚠️ Considera: los datos viajan a un servicio gratuito de terceros (jsonblob.com); cualquiera que conozca tu código podría leerlos, y el espacio se elimina tras ~30 días sin uso.</div>
         <div id="cloudStatus" style="margin:10px 0;font-size:.86rem;"></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn ghost" id="btnCloudCreate">Crear nube nueva</button>
@@ -528,7 +519,16 @@
           <button class="btn ghost" id="btnCloudDisconnect" style="display:none;">Desconectar nube</button>
         </div>
         <div style="border-top:1px solid var(--line);margin:16px 0 14px;"></div>
-        <div class="panel-sub" style="margin-bottom:10px;">Alternativa universal (funciona en cualquier dispositivo, incluido celular): exporta una copia y súbela a tu OneDrive manualmente, o impórtala desde ahí.</div>
+        <div class="panel-sub" style="margin-bottom:6px;"><strong style="color:var(--text);">Archivo en OneDrive (opcional, solo Chrome/Edge de escritorio).</strong> Conecta un archivo dentro de tu carpeta de OneDrive para tener además una copia local que se guarda sola en esta computadora. No está disponible en navegadores móviles — ahí usa la nube automática de arriba.</div>
+        <div id="syncStatus" style="margin:12px 0;font-size:.86rem;"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn ghost" id="btnSyncConnect">Conectar archivo (guarda dentro de tu carpeta OneDrive)</button>
+          <button class="btn ghost" id="btnSyncReconnect" style="display:none;">Reconectar archivo</button>
+          <button class="btn ghost" id="btnSyncNow" style="display:none;">Sincronizar ahora</button>
+          <button class="btn ghost" id="btnSyncDisconnect" style="display:none;">Desconectar</button>
+        </div>
+        <div style="border-top:1px solid var(--line);margin:16px 0 14px;"></div>
+        <div class="panel-sub" style="margin-bottom:10px;">Alternativa manual (funciona en cualquier dispositivo): exporta una copia y súbela a tu OneDrive a mano, o impórtala desde ahí.</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn ghost" id="btnExportJSON">Exportar copia (.json)</button>
           <button class="btn ghost" id="btnImportJSON">Importar copia (.json)</button>
