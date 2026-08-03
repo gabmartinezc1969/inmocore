@@ -16,7 +16,9 @@ export function toast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  // Give longer messages (e.g. a one-time sync code) more time to actually read.
+  const duration = Math.min(9000, Math.max(2400, msg.length * 60));
+  toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
 /* ============ Shared category table renderer (used by resumen/ingresos/gastos) ============ */

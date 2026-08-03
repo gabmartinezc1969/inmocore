@@ -276,8 +276,27 @@ export function cloudDisconnect() {
   cloudState = { lastPush: null, lastError: null };
   onDirty();
 }
+/**
+ * Runs on every load. If this device already knows the shared cloud code,
+ * it pulls silently — the whole point is that sync is immediate and
+ * unattended from here on. If this is the very first device to ever open
+ * the app with no code set anywhere, it auto-provisions one (no button
+ * click) so there's always *something* to share — see the prominent
+ * "Nube creada automáticamente" toast, and the code stays visible any time
+ * in Configuración → Nube anónima. Linking a second device (e.g. the
+ * mobile install) still needs that code pasted once via "Conectar con
+ * código" — there is no way to guess a shared secret without it — but
+ * every load after that is fully automatic on both.
+ */
 export async function initCloud() {
-  if (getCloudId()) await cloudPull(true);
+  if (getCloudId()) {
+    await cloudPull(true);
+  } else {
+    const id = await cloudCreate();
+    if (id) {
+      onDirty(`Nube creada automáticamente. Código para conectar tu otro dispositivo (Configuración → Nube anónima): ${id}`);
+    }
+  }
   onDirty();
 }
 

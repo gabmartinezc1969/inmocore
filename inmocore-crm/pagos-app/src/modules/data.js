@@ -3,7 +3,7 @@
 // (see state.js) so subscribers re-render automatically.
 import { CONFIG } from './config.js';
 import { state, toRaw } from './state.js';
-import { SEED_DATA } from './seed-data.js';
+import { SEED_DATA, SEED_INVESTMENTS, SEED_CREDITS } from './seed-data.js';
 
 const K = CONFIG.storage.keys;
 
@@ -143,7 +143,8 @@ export function saveDebtBalance(cat, saldo) {
 
 /* ============ Investments ============ */
 export function loadInvestments() {
-  state.investments = readJSON(K.investments, []);
+  const raw = readJSON(K.investments, null);
+  state.investments = (Array.isArray(raw) && raw.length) ? raw : SEED_INVESTMENTS;
   if (!Array.isArray(toRaw(state.investments))) state.investments = [];
 }
 export function saveInvestments(list) {
@@ -153,7 +154,8 @@ export function saveInvestments(list) {
 
 /* ============ Credits ============ */
 export function loadCredits() {
-  state.credits = readJSON(K.credits, []);
+  const raw = readJSON(K.credits, null);
+  state.credits = (Array.isArray(raw) && raw.length) ? raw : SEED_CREDITS;
   if (!Array.isArray(toRaw(state.credits))) state.credits = [];
 }
 export function saveCredits(list) {
