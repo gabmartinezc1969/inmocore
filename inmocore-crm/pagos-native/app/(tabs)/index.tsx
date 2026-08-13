@@ -7,8 +7,9 @@ import Screen from '@/src/components/Screen';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import SegmentedControl from '@/src/components/SegmentedControl';
+import Chip from '@/src/components/Chip';
 import LineChart from '@/src/components/charts/LineChart';
-import ProgressBar from '@/src/components/ProgressBar';
+import RingProgress from '@/src/components/RingProgress';
 import TransactionRow from '@/src/components/TransactionRow';
 import EmptyState from '@/src/components/EmptyState';
 import Badge from '@/src/components/Badge';
@@ -18,16 +19,25 @@ import { useStore } from '@/src/store/useStore';
 import { useEnrichedLedger } from '@/src/store/hooks';
 import {
   targetYearMonth, categoryTable, lastNMonths, realSum, filterRows,
-  computeAlerts, pendingItems, monthLabelShort,
+  computeAlerts, pendingItems, monthLabelShort, dailySeriesMonth, allYears,
 } from '@/src/utils/finance';
 import { fmtMoney, fmtPct } from '@/src/utils/format';
 import { CONFIG } from '@/src/config/config';
+
+type Period = 'day' | 'week' | 'month' | 'year';
+const PERIODS: { label: string; value: Period }[] = [
+  { label: 'Día', value: 'day' },
+  { label: 'Semana', value: 'week' },
+  { label: 'Mes', value: 'month' },
+  { label: 'Año', value: 'year' },
+];
 
 export default function InicioScreen() {
   const c = useTheme();
   const ledger = useEnrichedLedger();
   const addMovimiento = useStore((s) => s.addMovimiento);
   const [metric, setMetric] = useState<'I' | 'E'>('I');
+  const [period, setPeriod] = useState<Period>('month');
   const [addOpen, setAddOpen] = useState(false);
 
   const { year, monthIdx } = targetYearMonth(ledger);
@@ -35,10 +45,27 @@ export default function InicioScreen() {
   const egr = categoryTable(ledger, year, monthIdx, 'E');
   const disponible = ing.totals.real - egr.totals.real;
   const tasaAhorro = ing.totals.real > 0 ? disponible / ing.totals.real : 0;
+  const budgetPct = egr.totals.presupuesto ? egr.totals.real / egr.totals.presupuesto : 0;
 
   const months = useMemo(() => lastNMonths(6, ledger), [ledger]);
-  const trendLabels = months.map(monthLabelShort);
-  const trendData = months.map((mo) => realSum(filterRows(ledger, { year: mo.year, monthIdx: mo.monthIdx, tipo: metric })));
+
+  const trend = useMemo(() => {
+    if (period === 'day') {
+      const daily = dailySeriesMonth(ledger, year, monthIdx)[metric === 'I' ? 'ing' : 'egr'];
+      return { labels: daily.map((_, i) => String(i + 1)), data: daily };
+    }
+    if (period === 'week') {
+      const daily = dailySeriesMonth(ledger, year, monthIdx)[metric === 'I' ? 'ing' : 'egr'];
+      const weeks: number[] = [];
+      for (let i = 0; i < daily.length; i += 7) weeks.push(daily.slice(i, i + 7).reduce((s, v) => s + v, 0));
+      return { labels: weeks.map((_, i) => `Sem ${i + 1}`), data: weeks };
+    }
+    if (period === 'year') {
+      const years = allYears(ledger).slice(-5);
+      return { labels: years.map(String), data: years.map((y) => realSum(filterRows(ledger, { year: y, tipo: metric }))) };
+    }
+    return { labels: months.map(monthLabelShort), data: months.map((mo) => realSum(filterRows(ledger, { year: mo.year, monthIdx: mo.monthIdx, tipo: metric }))) };
+  }, [period, metric, ledger, year, monthIdx, months]);
 
   const alerts = useMemo(() => computeAlerts(ledger), [ledger]);
   const pending = useMemo(() => pendingItems(ledger).filter((p) => p.diffDays >= 0).slice(0, 3), [ledger]);
@@ -78,9 +105,12 @@ export default function InicioScreen() {
       />
 
       <Card>
-        <Text style={[styles.cardTitle, { color: c.text }]}>Tendencia · últimos {months.length} meses</Text>
-        {trendData.some((v) => v > 0) ? (
-          <LineChart labels={trendLabels} series={[{ data: trendData, color: metric === 'I' ? c.income : c.expense, area: true }]} />
+        <Text style={[styles.cardTitle, { color: c.text }]}>Tendencia</Text>
+        <View style={styles.periodRow}>
+          {PERIODS.map((p) => <Chip key={p.value} label={p.label} active={period === p.value} onPress={() => setPeriod(p.value)} />)}
+        </View>
+        {trend.data.some((v) => v > 0) ? (
+          <LineChart labels={trend.labels} series={[{ data: trend.data, color: metric === 'I' ? c.income : c.expense, area: true }]} />
         ) : (
           <EmptyState title="Sin datos suficientes todavía" />
         )}
@@ -92,15 +122,16 @@ export default function InicioScreen() {
         <StatCard icon="wallet" label="Ahorro" value={fmtPct(tasaAhorro)} tone={tasaAhorro >= 0.1 ? 'income' : 'warning'} />
       </View>
 
-      <Card>
-        <View style={styles.rowBetween}>
-          <Text style={[styles.cardTitle, { color: c.text }]}>Presupuesto del mes</Text>
-          <Text style={[styles.cardMeta, { color: c.textMuted }]}>{fmtMoney(egr.totals.real)} / {fmtMoney(egr.totals.presupuesto)}</Text>
-        </View>
-        <View style={{ marginTop: 10 }}>
-          <ProgressBar pct={egr.totals.presupuesto ? egr.totals.real / egr.totals.presupuesto : 0} />
-        </View>
-      </Card>
+      <Pressable onPress={() => router.push('/resumen')}>
+        <Card style={styles.budgetCard}>
+          <RingProgress pct={budgetPct} />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.cardTitle, { color: c.text }]}>Presupuesto del mes</Text>
+            <Text style={[styles.cardMeta, { color: c.textMuted, marginTop: 3 }]}>{fmtMoney(egr.totals.real)} de {fmtMoney(egr.totals.presupuesto)}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={c.textFaint} />
+        </Card>
+      </Pressable>
 
       {alerts.length > 0 && (
         <Card>
@@ -176,6 +207,8 @@ const styles = StyleSheet.create({
   balanceItemText: { color: '#fff', fontSize: 12.5, fontWeight: '700' },
   cardTitle: { fontSize: 15, fontWeight: '800' },
   cardMeta: { fontSize: 12, fontWeight: '700' },
+  periodRow: { flexDirection: 'row', gap: 8, marginTop: 10, marginBottom: 4 },
+  budgetCard: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   statsRow: { flexDirection: 'row', gap: 12 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   link: { fontSize: 12.5, fontWeight: '700' },
