@@ -17,6 +17,32 @@ backend ni conexión a internet.
 - **expo-linear-gradient**, **@expo/vector-icons**, **@react-native-community/datetimepicker**
 - **expo-document-picker** / **expo-file-system** / **expo-sharing** para exportar/importar respaldo en `.json`
 
+## Ejecutar en Expo Go
+
+Esta app **no requiere un development build ni EAS** — todas sus dependencias
+(`expo-router`, `expo-linear-gradient`, `expo-file-system`, `expo-sharing`,
+`expo-document-picker`, `@react-native-community/datetimepicker`,
+`react-native-svg`, `@react-native-async-storage/async-storage`, etc.) forman
+parte del runtime estándar que trae **Expo Go**; no se agregó código nativo
+propio. Se verificó exportando el bundle de producción para iOS y Android
+(`npx expo export --platform ios|android`) sin errores.
+
+1. Instala la app **Expo Go** en tu teléfono (App Store en iOS, Google Play
+   en Android) — necesitas la versión compatible con **Expo SDK 54**.
+2. En tu computadora, dentro de esta carpeta:
+   ```bash
+   npm install
+   npx expo start
+   ```
+3. Escanea el código QR que aparece en la terminal / navegador:
+   - **Android:** desde el botón "Scan QR code" dentro de Expo Go.
+   - **iOS:** desde la app Cámara del sistema (te ofrecerá abrir Expo Go).
+4. El teléfono y la computadora deben estar en la **misma red Wi‑Fi**. Si no
+   es posible (redes distintas, restricciones corporativas), usa:
+   ```bash
+   npm run start:tunnel
+   ```
+
 ## Estructura
 
 ```
