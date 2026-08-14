@@ -78,9 +78,14 @@ export default function InicioScreen() {
           <Text style={[styles.hello, { color: c.textMuted }]}>{CONFIG.months[monthIdx]} {year}</Text>
           <Text style={[styles.brand, { color: c.text }]}>Hola 👋</Text>
         </View>
-        <Pressable onPress={() => router.push('/configuracion')} style={[styles.iconBtn, { backgroundColor: c.surface, borderColor: c.border }]}>
-          <Ionicons name="settings-outline" size={18} color={c.text} />
-        </Pressable>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Pressable onPress={() => router.push('/informes')} style={[styles.iconBtn, { backgroundColor: c.surface, borderColor: c.border }]}>
+            <Ionicons name="document-text-outline" size={18} color={c.text} />
+          </Pressable>
+          <Pressable onPress={() => router.push('/configuracion')} style={[styles.iconBtn, { backgroundColor: c.surface, borderColor: c.border }]}>
+            <Ionicons name="settings-outline" size={18} color={c.text} />
+          </Pressable>
+        </View>
       </View>
 
       <LinearGradient colors={[c.primary, c.primaryDark]} style={styles.balanceCard}>

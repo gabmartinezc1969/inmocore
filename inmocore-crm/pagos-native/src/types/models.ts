@@ -50,4 +50,5 @@ export interface Settings {
   onboardingSeen: boolean;
   pin: string | null; // 4-digit PIN, plain-stored locally like the web app (quick-lock, not encryption)
   dismissedSubs: string[]; // keys of subscriptions the user marked as "not a subscription"
+  presupuestoMensual: number; // overall monthly spending target shown on the Informes screen; 0 = not set yet
 }

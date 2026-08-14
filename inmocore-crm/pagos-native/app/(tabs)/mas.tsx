@@ -23,6 +23,7 @@ export default function MasScreen() {
         <Text style={[styles.group, { color: c.textFaint }]}>Análisis</Text>
         <Card padded={false}>
           <View style={styles.list}>
+            <MenuRow icon="document-text-outline" label="Informes" subtitle="Presupuesto mensual y balance" onPress={() => router.push('/informes')} />
             <MenuRow icon="calendar-outline" label="Resumen mensual" subtitle="Ingresos y egresos del mes" onPress={() => router.push('/resumen')} />
             <MenuRow icon="bar-chart-outline" label="Dashboard anual" subtitle="Panorama del año completo" onPress={() => router.push('/anual')} />
             <MenuRow icon="trending-up-outline" label="Ingresos" subtitle="Fuentes de ingreso" onPress={() => router.push('/ingresos')} />

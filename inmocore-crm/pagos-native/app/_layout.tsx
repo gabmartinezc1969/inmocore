@@ -23,6 +23,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="informes" options={{ headerShown: false }} />
         <Stack.Screen name="resumen" options={{ title: 'Resumen mensual' }} />
         <Stack.Screen name="anual" options={{ title: 'Dashboard anual' }} />
         <Stack.Screen name="ingresos" options={{ title: 'Ingresos' }} />

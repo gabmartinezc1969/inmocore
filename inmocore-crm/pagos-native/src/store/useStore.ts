@@ -4,6 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { CONFIG } from '@/src/config/config';
 import { Movimiento, Credito, Activo, Inversion, Settings } from '@/src/types/models';
 import { buildDemoLedger, buildDemoCredits, buildDemoAssets, buildDemoInvestments } from '@/src/data/seedData';
+import { buildRealLedger, buildRealCredits, buildRealAssets, buildRealInvestments } from '@/src/data/pagos2026Seed';
 
 function uid(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -41,6 +42,7 @@ interface AppState {
   setOnboardingSeen: () => void;
   setPin: (pin: string | null) => void;
   dismissSubscription: (key: string) => void;
+  setPresupuestoMensual: (monto: number) => void;
 
   bulkRename: (filter: { year?: number; monthIdx?: number; categoria?: string; concepto?: string }, newCategoria: string | null, newConcepto: string | null) => number;
   copyMonth: (opts: { tipo?: 'I' | 'E'; fromYear: number; fromMonth: number; toYear: number; toMonth: number; asPending: boolean }) => number;
@@ -51,15 +53,15 @@ interface AppState {
   importState: (data: Partial<Pick<AppState, 'ledger' | 'credits' | 'assets' | 'investments'>>) => void;
 }
 
-const defaultSettings: Settings = { theme: 'light', onboardingSeen: false, pin: null, dismissedSubs: [] };
+const defaultSettings: Settings = { theme: 'light', onboardingSeen: false, pin: null, dismissedSubs: [], presupuestoMensual: 0 };
 
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
-      ledger: buildDemoLedger(),
-      credits: buildDemoCredits(),
-      assets: buildDemoAssets(),
-      investments: buildDemoInvestments(),
+      ledger: buildRealLedger(),
+      credits: buildRealCredits(),
+      assets: buildRealAssets(),
+      investments: buildRealInvestments(),
       settings: defaultSettings,
       hydrated: false,
       sessionUnlocked: false,
@@ -87,6 +89,7 @@ export const useStore = create<AppState>()(
       setOnboardingSeen: () => set((s) => ({ settings: { ...s.settings, onboardingSeen: true } })),
       setPin: (pin) => set((s) => ({ settings: { ...s.settings, pin } })),
       dismissSubscription: (key) => set((s) => ({ settings: { ...s.settings, dismissedSubs: [...s.settings.dismissedSubs, key] } })),
+      setPresupuestoMensual: (monto) => set((s) => ({ settings: { ...s.settings, presupuestoMensual: Math.max(0, monto) } })),
 
       bulkRename: (filter, newCategoria, newConcepto) => {
         let count = 0;
