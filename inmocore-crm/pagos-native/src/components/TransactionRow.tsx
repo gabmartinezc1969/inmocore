@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/store/hooks';
 import { catColor } from '@/src/theme/colors';

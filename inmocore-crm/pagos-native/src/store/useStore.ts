@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { CONFIG } from '@/src/config/config';
-import { Movimiento, Credito, Activo, Inversion, Settings } from '@/src/types/models';
+import { Movimiento, Credito, Activo, Inversion, Settings, FontScaleSetting } from '@/src/types/models';
 import { buildDemoLedger, buildDemoCredits, buildDemoAssets, buildDemoInvestments } from '@/src/data/seedData';
 import { buildRealLedger, buildRealCredits, buildRealAssets, buildRealInvestments } from '@/src/data/pagos2026Seed';
 import { dedupeIds } from '@/src/utils/dedupe';
@@ -45,6 +45,7 @@ interface AppState {
   setPin: (pin: string | null) => void;
   dismissSubscription: (key: string) => void;
   setPresupuestoMensual: (monto: number) => void;
+  setFontScale: (scale: FontScaleSetting) => void;
 
   bulkRename: (filter: { year?: number; monthIdx?: number; categoria?: string; concepto?: string }, newCategoria: string | null, newConcepto: string | null) => number;
   copyMonth: (opts: { tipo?: 'I' | 'E'; fromYear: number; fromMonth: number; toYear: number; toMonth: number; asPending: boolean }) => number;
@@ -55,7 +56,7 @@ interface AppState {
   importState: (data: Partial<Pick<AppState, 'ledger' | 'credits' | 'assets' | 'investments'>>) => void;
 }
 
-const defaultSettings: Settings = { theme: 'light', onboardingSeen: false, pin: null, dismissedSubs: [], presupuestoMensual: 0 };
+const defaultSettings: Settings = { theme: 'light', onboardingSeen: false, pin: null, dismissedSubs: [], presupuestoMensual: 0, fontScale: 'normal' };
 
 export const useStore = create<AppState>()(
   persist(
@@ -105,6 +106,7 @@ export const useStore = create<AppState>()(
       setPin: (pin) => set((s) => ({ settings: { ...s.settings, pin } })),
       dismissSubscription: (key) => set((s) => ({ settings: { ...s.settings, dismissedSubs: [...s.settings.dismissedSubs, key] } })),
       setPresupuestoMensual: (monto) => set((s) => ({ settings: { ...s.settings, presupuestoMensual: Math.max(0, monto) } })),
+      setFontScale: (fontScale) => set((s) => ({ settings: { ...s.settings, fontScale } })),
 
       bulkRename: (filter, newCategoria, newConcepto) => {
         let count = 0;

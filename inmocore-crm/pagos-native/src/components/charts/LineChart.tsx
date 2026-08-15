@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, LayoutChangeEvent, Pressable } from 'react-native';
+import { View, StyleSheet, LayoutChangeEvent, Pressable } from 'react-native';
+import Text from '@/src/components/AppText';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop, Line as SvgLine } from 'react-native-svg';
 import { useTheme } from '@/src/store/hooks';
 import { fmtMoney } from '@/src/utils/format';

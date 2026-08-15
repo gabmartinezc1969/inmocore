@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TextInput, TextInputProps, StyleSheet, Switch, StyleProp, ViewStyle } from 'react-native';
+import { View, TextInput, TextInputProps, StyleSheet, Switch, StyleProp, ViewStyle } from 'react-native';
+import Text from '@/src/components/AppText';
 import { useTheme } from '@/src/store/hooks';
 
 // `style` here sizes the wrapping View (e.g. `style={{ flex: 1 }}` to sit

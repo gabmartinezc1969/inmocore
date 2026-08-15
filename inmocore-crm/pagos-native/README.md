@@ -84,7 +84,8 @@ Informes (presupuesto mensual con anillo de balance disponible), Resumen
 mensual, Dashboard anual, Ingresos, Gastos, Créditos y deudas
 (amortización francesa), Patrimonio y score financiero, Inversiones,
 detección automática de Suscripciones, Recordatorios, Alertas, tema
-claro/oscuro, PIN de acceso y exportar/importar respaldo en JSON.
+claro/oscuro, tamaño de texto ajustable, PIN de acceso, exportar/importar
+respaldo en JSON, y copiar/borrar un mes específico desde Configuración.
 
 **🟡 Versión simplificada frente a la web:** las gráficas usan un motor
 propio en SVG en vez de Chart.js; Gastos muestra concentración por

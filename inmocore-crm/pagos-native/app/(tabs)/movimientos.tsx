@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, SectionList, TextInput, Pressable } from 'react-native';
+import { View, StyleSheet, SectionList, TextInput, Pressable } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Dropdown, { DropdownOption } from '@/src/components/Dropdown';

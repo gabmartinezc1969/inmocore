@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '@/src/components/Screen';
 import ScreenHeader from '@/src/components/ScreenHeader';

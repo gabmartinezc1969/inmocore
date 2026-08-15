@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { View, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import Sheet from './Sheet';
 import { useTheme } from '@/src/store/hooks';

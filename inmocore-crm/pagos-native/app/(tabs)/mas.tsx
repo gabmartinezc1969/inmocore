@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import { router } from 'expo-router';
 import Screen from '@/src/components/Screen';
 import Card from '@/src/components/Card';

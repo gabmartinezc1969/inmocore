@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import { useTheme } from '@/src/store/hooks';
 import { pressedStyle } from '@/src/utils/press';
 

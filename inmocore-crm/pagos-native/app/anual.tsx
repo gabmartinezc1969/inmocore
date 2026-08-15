@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import Screen from '@/src/components/Screen';
 import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';

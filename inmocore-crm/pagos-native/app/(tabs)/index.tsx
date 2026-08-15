@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
+import Text from '@/src/components/AppText';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -95,11 +96,11 @@ export default function InicioScreen() {
         <View style={styles.balanceRow}>
           <View style={styles.balanceItem}>
             <Ionicons name="arrow-down-circle" size={16} color="#8DF0C7" />
-            <Text style={styles.balanceItemText}>Ingresos {fmtMoney(ing.totals.real)}</Text>
+            <Text style={styles.balanceItemText} numberOfLines={1}>Ingresos {fmtMoney(ing.totals.real)}</Text>
           </View>
           <View style={styles.balanceItem}>
             <Ionicons name="arrow-up-circle" size={16} color="#FFB18A" />
-            <Text style={styles.balanceItemText}>Gastos {fmtMoney(egr.totals.real)}</Text>
+            <Text style={styles.balanceItemText} numberOfLines={1}>Gastos {fmtMoney(egr.totals.real)}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -205,11 +206,13 @@ const styles = StyleSheet.create({
   hello: { fontSize: 12.5, fontWeight: '700', textTransform: 'capitalize' },
   brand: { fontSize: 22, fontWeight: '800', marginTop: 2 },
   iconBtn: { width: 40, height: 40, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  balanceCard: { borderRadius: 24, padding: 20, gap: 6 },
+  balanceCard: { borderRadius: 24, padding: 20, gap: 6, overflow: 'hidden' },
   balanceLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '600' },
   balanceValue: { color: '#fff', fontSize: 34, fontWeight: '800' },
-  balanceRow: { flexDirection: 'row', gap: 18, marginTop: 10 },
-  balanceItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  // Wraps to a second line instead of overflowing the card when both
+  // amounts together don't fit one row (large balances, narrow screens).
+  balanceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
+  balanceItem: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
   balanceItemText: { color: '#fff', fontSize: 12.5, fontWeight: '700' },
   cardTitle: { fontSize: 15, fontWeight: '800' },
   cardMeta: { fontSize: 12, fontWeight: '700' },

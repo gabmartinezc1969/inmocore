@@ -1,5 +1,6 @@
 import React, { PropsWithChildren, useEffect, useRef } from 'react';
-import { Modal, View, Text, StyleSheet, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { Modal, View, StyleSheet, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/store/hooks';
 import { pressedStyle } from '@/src/utils/press';

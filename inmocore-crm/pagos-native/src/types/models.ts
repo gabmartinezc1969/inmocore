@@ -44,6 +44,7 @@ export interface Inversion {
 }
 
 export type ThemeSetting = 'light' | 'dark';
+export type FontScaleSetting = 'small' | 'normal' | 'large' | 'xlarge';
 
 export interface Settings {
   theme: ThemeSetting;
@@ -51,4 +52,5 @@ export interface Settings {
   pin: string | null; // 4-digit PIN, plain-stored locally like the web app (quick-lock, not encryption)
   dismissedSubs: string[]; // keys of subscriptions the user marked as "not a subscription"
   presupuestoMensual: number; // overall monthly spending target shown on the Informes screen; 0 = not set yet
+  fontScale: FontScaleSetting; // app-wide text size, independent of the OS accessibility setting
 }
