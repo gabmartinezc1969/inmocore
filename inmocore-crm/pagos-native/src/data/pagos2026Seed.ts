@@ -10,6 +10,7 @@
 // backup — this file only supplies what a fresh install starts with.
 import raw from './pagos2026-seed.json';
 import { Movimiento, Credito, Activo, Inversion } from '@/src/types/models';
+import { dedupeIds } from '@/src/utils/dedupe';
 
 interface RawLedgerRow {
   id: string;
@@ -60,27 +61,22 @@ interface RawSeed {
 const seed = raw as unknown as RawSeed;
 
 export function buildRealLedger(): Movimiento[] {
+  const mapped = seed.ledger.map((r) => ({
+    id: r.id,
+    fecha: r.f,
+    tipo: r.t,
+    categoria: r.c,
+    concepto: r.n,
+    presupuesto: r.p || 0,
+    monto: r.m,
+    metodoPago: r.mp || undefined,
+    deducible: !!r.ded,
+  }));
   // The source export has one colliding pair of ids (two rows created in
   // the same millisecond upstream). React's list keys — and everything
   // that looks a row up by id (edit, delete) — need uniqueness guaranteed,
   // so de-dupe defensively instead of trusting the raw export.
-  const seen = new Set<string>();
-  return seed.ledger.map((r) => {
-    let id = r.id;
-    while (seen.has(id)) id = `${r.id}_dup${Math.random().toString(36).slice(2, 6)}`;
-    seen.add(id);
-    return {
-      id,
-      fecha: r.f,
-      tipo: r.t,
-      categoria: r.c,
-      concepto: r.n,
-      presupuesto: r.p || 0,
-      monto: r.m,
-      metodoPago: r.mp || undefined,
-      deducible: !!r.ded,
-    };
-  });
+  return dedupeIds(mapped).rows;
 }
 
 export function buildRealCredits(): Credito[] {

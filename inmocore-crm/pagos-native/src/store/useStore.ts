@@ -5,6 +5,7 @@ import { CONFIG } from '@/src/config/config';
 import { Movimiento, Credito, Activo, Inversion, Settings } from '@/src/types/models';
 import { buildDemoLedger, buildDemoCredits, buildDemoAssets, buildDemoInvestments } from '@/src/data/seedData';
 import { buildRealLedger, buildRealCredits, buildRealAssets, buildRealInvestments } from '@/src/data/pagos2026Seed';
+import { dedupeIds } from '@/src/utils/dedupe';
 
 function uid(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -21,6 +22,7 @@ interface AppState {
 
   setHydrated: () => void;
   unlockSession: () => void;
+  sanitizeAfterHydrate: () => void;
 
   addMovimiento: (m: Omit<Movimiento, 'id'>) => void;
   updateMovimiento: (id: string, m: Omit<Movimiento, 'id'>) => void;
@@ -68,6 +70,19 @@ export const useStore = create<AppState>()(
 
       setHydrated: () => set({ hydrated: true }),
       unlockSession: () => set({ sessionUnlocked: true }),
+
+      // Repairs id collisions in whatever was just loaded from disk. A code
+      // fix to the seed data can't retroactively fix a device that already
+      // persisted a colliding id before the fix shipped — this runs on
+      // every app start so already-installed copies self-heal too.
+      sanitizeAfterHydrate: () => set((s) => {
+        const led = dedupeIds(s.ledger);
+        const cred = dedupeIds(s.credits);
+        const ast = dedupeIds(s.assets);
+        const inv = dedupeIds(s.investments);
+        if (!led.changed && !cred.changed && !ast.changed && !inv.changed) return {};
+        return { ledger: led.rows, credits: cred.rows, assets: ast.rows, investments: inv.rows };
+      }),
 
       addMovimiento: (m) => set((s) => ({ ledger: [...s.ledger, { ...m, id: uid() }] })),
       updateMovimiento: (id, m) => set((s) => ({ ledger: s.ledger.map((r) => (r.id === id ? { ...m, id } : r)) })),
@@ -157,7 +172,7 @@ export const useStore = create<AppState>()(
     {
       name: CONFIG.storage.key,
       storage: createJSONStorage(() => AsyncStorage),
-      onRehydrateStorage: () => (state) => state?.setHydrated(),
+      onRehydrateStorage: () => (state) => { state?.sanitizeAfterHydrate(); state?.setHydrated(); },
       partialize: (s) => ({ ledger: s.ledger, credits: s.credits, assets: s.assets, investments: s.investments, settings: s.settings }),
     }
   )
