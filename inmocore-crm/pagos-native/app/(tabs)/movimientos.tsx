@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, SectionList, TextInput, Pressable, ScrollView, LayoutChangeEvent } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, SectionList, TextInput, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Chip from '@/src/components/Chip';
+import Dropdown, { DropdownOption } from '@/src/components/Dropdown';
 import SegmentedControl from '@/src/components/SegmentedControl';
 import TransactionRow from '@/src/components/TransactionRow';
 import EmptyState from '@/src/components/EmptyState';
@@ -30,21 +30,17 @@ export default function MovimientosScreen() {
 
   const years = useMemo(() => allYears(ledger), [ledger]);
 
-  // Keep the selected year/month chip fully in view. Without this, tapping
-  // a chip near either edge of these horizontal rows (e.g. the current
-  // year, which sorts last) leaves it selected but still half clipped by
-  // the screen edge — looking like the filter options aren't rendering
-  // correctly rather than just needing a scroll.
-  const yearsScrollRef = useRef<ScrollView>(null);
-  const yearChipX = useRef<Record<string, number>>({});
-  const monthsScrollRef = useRef<ScrollView>(null);
-  const monthChipX = useRef<Record<string, number>>({});
-  const revealChip = (scrollRef: React.RefObject<ScrollView | null>, positions: Record<string, number>, key: string) => {
-    const x = positions[key];
-    if (x !== undefined) scrollRef.current?.scrollTo({ x: Math.max(0, x - 40), animated: true });
-  };
-  useEffect(() => revealChip(yearsScrollRef, yearChipX.current, year === null ? 'all' : String(year)), [year]);
-  useEffect(() => revealChip(monthsScrollRef, monthChipX.current, monthIdx === null ? 'all' : String(monthIdx)), [monthIdx]);
+  // Year/mes as compact dropdowns instead of horizontally-scrolling chip
+  // rows — one line, nothing sits partially off-screen, and it works the
+  // same regardless of how many years the ledger spans.
+  const yearOptions: DropdownOption[] = useMemo(() => [
+    { label: 'Todos los años', value: 'all' },
+    ...years.map((y) => ({ label: String(y), value: String(y) })),
+  ], [years]);
+  const monthOptions: DropdownOption[] = useMemo(() => [
+    { label: 'Todos los meses', value: 'all' },
+    ...CONFIG.months.map((m, idx) => ({ label: m.charAt(0).toUpperCase() + m.slice(1), value: String(idx) })),
+  ], []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -105,27 +101,24 @@ export default function MovimientosScreen() {
         options={[{ label: 'Todos', value: 'ALL' }, { label: 'Ingresos', value: 'I' }, { label: 'Gastos', value: 'E' }]}
       />
 
-      <ScrollView ref={yearsScrollRef} horizontal showsHorizontalScrollIndicator={false} style={styles.yearsRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
-        <View onLayout={(e: LayoutChangeEvent) => { yearChipX.current.all = e.nativeEvent.layout.x; }}>
-          <Chip label="Todos los años" active={year === null} onPress={() => setYear(null)} />
-        </View>
-        {years.map((y) => (
-          <View key={y} onLayout={(e: LayoutChangeEvent) => { yearChipX.current[String(y)] = e.nativeEvent.layout.x; }}>
-            <Chip label={String(y)} active={year === y} onPress={() => setYear(y)} />
-          </View>
-        ))}
-      </ScrollView>
-
-      <ScrollView ref={monthsScrollRef} horizontal showsHorizontalScrollIndicator={false} style={styles.monthsRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
-        <View onLayout={(e: LayoutChangeEvent) => { monthChipX.current.all = e.nativeEvent.layout.x; }}>
-          <Chip label="Todos los meses" active={monthIdx === null} onPress={() => setMonthIdx(null)} />
-        </View>
-        {CONFIG.monthsAbbr.map((label, idx) => (
-          <View key={label} onLayout={(e: LayoutChangeEvent) => { monthChipX.current[String(idx)] = e.nativeEvent.layout.x; }}>
-            <Chip label={label} active={monthIdx === idx} onPress={() => setMonthIdx(monthIdx === idx ? null : idx)} />
-          </View>
-        ))}
-      </ScrollView>
+      <View style={styles.filterRow}>
+        <Dropdown
+          title="Elegir año"
+          icon="calendar-outline"
+          value={year === null ? 'all' : String(year)}
+          options={yearOptions}
+          onChange={(v) => setYear(v === 'all' ? null : Number(v))}
+          style={{ flex: 1 }}
+        />
+        <Dropdown
+          title="Elegir mes"
+          icon="time-outline"
+          value={monthIdx === null ? 'all' : String(monthIdx)}
+          options={monthOptions}
+          onChange={(v) => setMonthIdx(v === 'all' ? null : Number(v))}
+          style={{ flex: 1 }}
+        />
+      </View>
 
       <SectionList
         sections={sections}
@@ -159,8 +152,7 @@ const styles = StyleSheet.create({
   searchWrap: { paddingHorizontal: 20, marginBottom: 12 },
   searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 },
   searchInput: { flex: 1, fontSize: 14 },
-  yearsRow: { marginTop: 12, marginBottom: 4, flexGrow: 0 },
-  monthsRow: { marginTop: 8, marginBottom: 10, flexGrow: 0 },
+  filterRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginTop: 12, marginBottom: 10 },
   sectionHeader: { fontSize: 12.5, fontWeight: '800', textTransform: 'capitalize', paddingTop: 14, paddingBottom: 6 },
   listContent: { paddingHorizontal: 20, paddingBottom: 40 },
 });
