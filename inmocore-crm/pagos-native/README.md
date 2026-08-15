@@ -43,6 +43,27 @@ propio. Se verificó exportando el bundle de producción para iOS y Android
    npm run start:tunnel
    ```
 
+## Generar un APK para instalar en Android
+
+No requiere Android Studio ni SDK local — usa **EAS Build**, el servicio de
+compilación en la nube de Expo (gratis para este tipo de builds internas):
+
+```bash
+npm install -g eas-cli
+eas login              # con tu cuenta de Expo (crea una gratis si no tienes)
+eas build --platform android --profile preview
+```
+
+El perfil `preview` (ya configurado en `eas.json`) genera un **.apk** listo
+para instalar directamente (a diferencia de un `.aab`, que solo sirve para
+subir a Google Play). Al terminar la compilación (~10–15 min), la terminal
+te da un enlace de descarga — ábrelo desde el teléfono Android y toca
+"Instalar" (puede pedirte habilitar "Instalar apps de fuentes desconocidas"
+la primera vez).
+
+Para publicar en Google Play más adelante, usa el perfil `production`
+(genera `.aab`) y `eas submit`.
+
 ## Estructura
 
 ```
