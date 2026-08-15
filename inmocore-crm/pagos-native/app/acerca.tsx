@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import { useTheme } from '@/src/store/hooks';
 
@@ -30,7 +31,8 @@ const OUT_OF_SCOPE = [
 export default function AcercaScreen() {
   const c = useTheme();
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Acerca de esta app" />
       <Text style={[styles.lead, { color: c.textMuted }]}>
         Pagos es tu centro financiero personal: ingresos, gastos, deudas, patrimonio e inversiones en
         un solo lugar. Esta app nativa reimplementa la versión web (`pagos.html`) con el mismo modelo

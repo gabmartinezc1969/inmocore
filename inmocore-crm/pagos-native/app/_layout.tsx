@@ -28,19 +28,22 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        {/* headerShown: false everywhere below — each screen renders its own
+            ScreenHeader inside a safe-area-aware Screen instead of relying
+            on the native Stack header (see ScreenHeader.tsx for why). */}
         <Stack.Screen name="informes" options={{ headerShown: false }} />
-        <Stack.Screen name="resumen" options={{ title: 'Resumen mensual' }} />
-        <Stack.Screen name="anual" options={{ title: 'Dashboard anual' }} />
-        <Stack.Screen name="ingresos" options={{ title: 'Ingresos' }} />
-        <Stack.Screen name="gastos" options={{ title: 'Gastos' }} />
-        <Stack.Screen name="deudas" options={{ title: 'Créditos y deudas' }} />
-        <Stack.Screen name="patrimonio" options={{ title: 'Patrimonio y score' }} />
-        <Stack.Screen name="inversiones" options={{ title: 'Inversiones' }} />
-        <Stack.Screen name="suscripciones" options={{ title: 'Suscripciones' }} />
-        <Stack.Screen name="recordatorios" options={{ title: 'Recordatorios' }} />
-        <Stack.Screen name="alertas" options={{ title: 'Alertas' }} />
-        <Stack.Screen name="configuracion" options={{ title: 'Configuración' }} />
-        <Stack.Screen name="acerca" options={{ title: 'Acerca de esta app' }} />
+        <Stack.Screen name="resumen" options={{ headerShown: false }} />
+        <Stack.Screen name="anual" options={{ headerShown: false }} />
+        <Stack.Screen name="ingresos" options={{ headerShown: false }} />
+        <Stack.Screen name="gastos" options={{ headerShown: false }} />
+        <Stack.Screen name="deudas" options={{ headerShown: false }} />
+        <Stack.Screen name="patrimonio" options={{ headerShown: false }} />
+        <Stack.Screen name="inversiones" options={{ headerShown: false }} />
+        <Stack.Screen name="suscripciones" options={{ headerShown: false }} />
+        <Stack.Screen name="recordatorios" options={{ headerShown: false }} />
+        <Stack.Screen name="alertas" options={{ headerShown: false }} />
+        <Stack.Screen name="configuracion" options={{ headerShown: false }} />
+        <Stack.Screen name="acerca" options={{ headerShown: false }} />
       </Stack>
     </SafeAreaProvider>
   );

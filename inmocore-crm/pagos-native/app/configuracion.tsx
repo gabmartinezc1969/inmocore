@@ -5,6 +5,7 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import SegmentedControl from '@/src/components/SegmentedControl';
 import Button from '@/src/components/Button';
@@ -96,7 +97,8 @@ export default function ConfiguracionScreen() {
   ]);
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Configuración" />
       <Card>
         <Text style={[styles.title, { color: c.text }]}>Apariencia</Text>
         <Text style={[styles.sub, { color: c.textMuted }]}>Elige entre tema oscuro o claro para toda la aplicación.</Text>

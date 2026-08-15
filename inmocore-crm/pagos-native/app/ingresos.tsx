@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import { YearSwitcher } from '@/src/components/MonthSwitcher';
@@ -25,7 +26,8 @@ export default function IngresosScreen() {
   const donutData = ing.rows.filter((r) => r.real > 0).map((r) => ({ label: r.categoria, value: r.real, color: catColor(r.categoria) }));
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Ingresos" />
       <YearSwitcher year={year} onChange={setYear} />
 
       <View style={styles.statsRow}>

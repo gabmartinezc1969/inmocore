@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import EmptyState from '@/src/components/EmptyState';
@@ -23,7 +24,8 @@ export default function SuscripcionesScreen() {
   const totalAnual = subs.reduce((s, r) => s + r.costoAnual, 0);
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Suscripciones" />
       <View style={styles.statsRow}>
         <StatCard icon="repeat-outline" label="Costo mensual" value={fmtMoney(totalMensual)} tone="expense" />
         <StatCard icon="calendar-outline" label="Costo anual" value={fmtMoney(totalAnual)} tone="expense" />

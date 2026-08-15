@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import Button from '@/src/components/Button';
@@ -55,7 +56,8 @@ export default function PatrimonioScreen() {
   const save = () => { if (editing) updateActivo(editing.id, draft); else addActivo(draft); setOpen(false); };
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Patrimonio y score" />
       <View style={styles.statsRow}>
         <StatCard icon="wallet-outline" label="Patrimonio neto" value={fmtMoney(patrimonioNeto)} tone={patrimonioNeto >= 0 ? 'income' : 'expense'} />
         <StatCard icon="albums-outline" label="Activos" value={fmtMoney(activosTotal)} />

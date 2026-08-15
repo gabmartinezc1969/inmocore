@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import Button from '@/src/components/Button';
@@ -47,7 +48,8 @@ export default function InversionesScreen() {
   const save = () => { if (editing) updateInversion(editing.id, draft); else addInversion(draft); setOpen(false); };
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Inversiones" />
       <View style={styles.statsRow}>
         <StatCard icon="stats-chart-outline" label="Valor actual" value={fmtMoney(valorTotal)} tone="income" />
         <StatCard icon="trending-up-outline" label="Rendimiento" value={fmtPct(rendimiento)} tone={rendimiento >= 0 ? 'income' : 'expense'} />

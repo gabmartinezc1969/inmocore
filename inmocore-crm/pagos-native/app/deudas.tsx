@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import ProgressBar from '@/src/components/ProgressBar';
@@ -45,7 +46,8 @@ export default function DeudasScreen() {
   const deudaTotal = totalDebt(credits);
 
   return (
-    <Screen edges={['bottom']}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Créditos y deudas" />
       <View style={styles.statsRow}>
         <StatCard icon="card-outline" label="Deuda total" value={fmtMoney(deudaTotal)} tone="expense" />
         <StatCard icon="albums-outline" label="Créditos activos" value={String(credits.length)} />
