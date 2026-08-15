@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, SectionList, TextInput, Pressable, ScrollView } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, SectionList, TextInput, Pressable, ScrollView, LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Chip from '@/src/components/Chip';
@@ -29,6 +29,22 @@ export default function MovimientosScreen() {
   const [editing, setEditing] = useState<Movimiento | null>(null);
 
   const years = useMemo(() => allYears(ledger), [ledger]);
+
+  // Keep the selected year/month chip fully in view. Without this, tapping
+  // a chip near either edge of these horizontal rows (e.g. the current
+  // year, which sorts last) leaves it selected but still half clipped by
+  // the screen edge — looking like the filter options aren't rendering
+  // correctly rather than just needing a scroll.
+  const yearsScrollRef = useRef<ScrollView>(null);
+  const yearChipX = useRef<Record<string, number>>({});
+  const monthsScrollRef = useRef<ScrollView>(null);
+  const monthChipX = useRef<Record<string, number>>({});
+  const revealChip = (scrollRef: React.RefObject<ScrollView | null>, positions: Record<string, number>, key: string) => {
+    const x = positions[key];
+    if (x !== undefined) scrollRef.current?.scrollTo({ x: Math.max(0, x - 40), animated: true });
+  };
+  useEffect(() => revealChip(yearsScrollRef, yearChipX.current, year === null ? 'all' : String(year)), [year]);
+  useEffect(() => revealChip(monthsScrollRef, monthChipX.current, monthIdx === null ? 'all' : String(monthIdx)), [monthIdx]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -89,15 +105,25 @@ export default function MovimientosScreen() {
         options={[{ label: 'Todos', value: 'ALL' }, { label: 'Ingresos', value: 'I' }, { label: 'Gastos', value: 'E' }]}
       />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yearsRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
-        <Chip label="Todos los años" active={year === null} onPress={() => setYear(null)} />
-        {years.map((y) => <Chip key={y} label={String(y)} active={year === y} onPress={() => setYear(y)} />)}
+      <ScrollView ref={yearsScrollRef} horizontal showsHorizontalScrollIndicator={false} style={styles.yearsRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
+        <View onLayout={(e: LayoutChangeEvent) => { yearChipX.current.all = e.nativeEvent.layout.x; }}>
+          <Chip label="Todos los años" active={year === null} onPress={() => setYear(null)} />
+        </View>
+        {years.map((y) => (
+          <View key={y} onLayout={(e: LayoutChangeEvent) => { yearChipX.current[String(y)] = e.nativeEvent.layout.x; }}>
+            <Chip label={String(y)} active={year === y} onPress={() => setYear(y)} />
+          </View>
+        ))}
       </ScrollView>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.monthsRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
-        <Chip label="Todos los meses" active={monthIdx === null} onPress={() => setMonthIdx(null)} />
+      <ScrollView ref={monthsScrollRef} horizontal showsHorizontalScrollIndicator={false} style={styles.monthsRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
+        <View onLayout={(e: LayoutChangeEvent) => { monthChipX.current.all = e.nativeEvent.layout.x; }}>
+          <Chip label="Todos los meses" active={monthIdx === null} onPress={() => setMonthIdx(null)} />
+        </View>
         {CONFIG.monthsAbbr.map((label, idx) => (
-          <Chip key={label} label={label} active={monthIdx === idx} onPress={() => setMonthIdx(monthIdx === idx ? null : idx)} />
+          <View key={label} onLayout={(e: LayoutChangeEvent) => { monthChipX.current[String(idx)] = e.nativeEvent.layout.x; }}>
+            <Chip label={label} active={monthIdx === idx} onPress={() => setMonthIdx(monthIdx === idx ? null : idx)} />
+          </View>
         ))}
       </ScrollView>
 
