@@ -23,6 +23,7 @@ export default function MovimientosScreen() {
 
   const [tipo, setTipo] = useState<'ALL' | 'I' | 'E'>('ALL');
   const [year, setYear] = useState<number | null>(null);
+  const [monthIdx, setMonthIdx] = useState<number | null>(null);
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Movimiento | null>(null);
@@ -34,8 +35,9 @@ export default function MovimientosScreen() {
     return ledger.filter((r) =>
       (tipo === 'ALL' || r.tipo === tipo) &&
       (year === null || r.year === year) &&
+      (monthIdx === null || r.monthIdx === monthIdx) &&
       (!q || r.concepto.toLowerCase().includes(q) || r.categoria.toLowerCase().includes(q)));
-  }, [ledger, tipo, year, search]);
+  }, [ledger, tipo, year, monthIdx, search]);
 
   const sections = useMemo(() => {
     const groups: Record<string, Movimiento[]> = {};
@@ -92,6 +94,13 @@ export default function MovimientosScreen() {
         {years.map((y) => <Chip key={y} label={String(y)} active={year === y} onPress={() => setYear(y)} />)}
       </ScrollView>
 
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.monthsRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
+        <Chip label="Todos los meses" active={monthIdx === null} onPress={() => setMonthIdx(null)} />
+        {CONFIG.monthsAbbr.map((label, idx) => (
+          <Chip key={label} label={label} active={monthIdx === idx} onPress={() => setMonthIdx(monthIdx === idx ? null : idx)} />
+        ))}
+      </ScrollView>
+
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -125,6 +134,7 @@ const styles = StyleSheet.create({
   searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 },
   searchInput: { flex: 1, fontSize: 14 },
   yearsRow: { marginTop: 12, marginBottom: 4, flexGrow: 0 },
+  monthsRow: { marginTop: 8, marginBottom: 4, flexGrow: 0 },
   sectionHeader: { fontSize: 12.5, fontWeight: '800', textTransform: 'capitalize', paddingTop: 14, paddingBottom: 6 },
   listContent: { paddingHorizontal: 20, paddingBottom: 40 },
 });

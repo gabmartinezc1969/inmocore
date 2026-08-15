@@ -1,6 +1,7 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/store/hooks';
 import { useStore } from '@/src/store/useStore';
 
@@ -9,7 +10,11 @@ export default function RootLayout() {
   const theme = useStore((s) => s.settings.theme);
 
   return (
-    <>
+    // Every screen uses <SafeAreaView>/useSafeAreaInsets() to stay clear of
+    // the status bar, notch and home indicator — that only works with a
+    // SafeAreaProvider at the root; without it insets silently fall back to
+    // zero and content draws under the system UI.
+    <SafeAreaProvider>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -37,6 +42,6 @@ export default function RootLayout() {
         <Stack.Screen name="configuracion" options={{ title: 'Configuración' }} />
         <Stack.Screen name="acerca" options={{ title: 'Acerca de esta app' }} />
       </Stack>
-    </>
+    </SafeAreaProvider>
   );
 }
