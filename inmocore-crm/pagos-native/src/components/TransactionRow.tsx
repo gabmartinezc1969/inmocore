@@ -33,7 +33,11 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
   const c = useTheme();
   const color = catColor(item.categoria);
   const isIncome = item.tipo === 'I';
-  const pending = item.monto === null;
+  // Treat an explicit 0 the same as "sin dato" (null): a lot of the real
+  // ledger's future/unconfirmed rows are stored as monto=0 rather than
+  // null, and showing those as a real "−$0" expense in red reads as an
+  // actual (if tiny) charge instead of "nothing happened here yet".
+  const pending = item.monto === null || item.monto === 0;
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={[styles.iconWrap, { backgroundColor: color + '22' }]}>

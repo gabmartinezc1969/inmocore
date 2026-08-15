@@ -109,7 +109,7 @@ export default function MovimientoForm({
           keyboardType="decimal-pad" placeholder="0"
         />
         <FormField
-          label="Real (vacío = pendiente)" style={{ flex: 1 }} value={draft.monto} onChangeText={(v) => set('monto', v)}
+          label="Real (vacío o 0 = pendiente)" style={{ flex: 1 }} value={draft.monto} onChangeText={(v) => set('monto', v)}
           keyboardType="decimal-pad" placeholder="0"
         />
       </View>

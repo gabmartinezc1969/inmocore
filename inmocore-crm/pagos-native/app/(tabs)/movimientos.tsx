@@ -105,7 +105,7 @@ export default function MovimientosScreen() {
         sections={sections}
         keyExtractor={(item) => item.id}
         renderSectionHeader={({ section }) => (
-          <Text style={[styles.sectionHeader, { color: c.textFaint, backgroundColor: c.bg }]}>{section.title}</Text>
+          <Text style={[styles.sectionHeader, { color: c.text, backgroundColor: c.bg }]}>{section.title}</Text>
         )}
         renderItem={({ item }) => <TransactionRow item={item} onPress={() => openEdit(item)} />}
         contentContainerStyle={styles.listContent}
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 },
   searchInput: { flex: 1, fontSize: 14 },
   yearsRow: { marginTop: 12, marginBottom: 4, flexGrow: 0 },
-  monthsRow: { marginTop: 8, marginBottom: 4, flexGrow: 0 },
+  monthsRow: { marginTop: 8, marginBottom: 10, flexGrow: 0 },
   sectionHeader: { fontSize: 12.5, fontWeight: '800', textTransform: 'capitalize', paddingTop: 14, paddingBottom: 6 },
   listContent: { paddingHorizontal: 20, paddingBottom: 40 },
 });
