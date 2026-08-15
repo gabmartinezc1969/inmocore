@@ -12,6 +12,7 @@ import { useStore } from '@/src/store/useStore';
 import { targetYearMonth, categoryTable, lastNMonths, daysInMonth } from '@/src/utils/finance';
 import { fmtMoney } from '@/src/utils/format';
 import { CONFIG } from '@/src/config/config';
+import { pressedStyle } from '@/src/utils/press';
 
 // "Informes" — monthly budget snapshot styled after the reference mock:
 // warm yellow hero header, a floating white panel with "Este mes" totals
@@ -65,7 +66,7 @@ export default function InformesScreen() {
     <View style={{ flex: 1, backgroundColor: YELLOW }}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: YELLOW }}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backBtn}>
+          <Pressable onPress={() => router.back()} hitSlop={10} style={({ pressed }) => [styles.backBtn, pressedStyle(pressed)]}>
             <Ionicons name="chevron-back" size={22} color={INK} />
           </Pressable>
           <Text style={styles.headerTitle}>Informes</Text>
@@ -79,7 +80,7 @@ export default function InformesScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.panel, { backgroundColor: c.surface, shadowColor: c.shadow }]}>
-          <Pressable style={styles.sectionRow} onPress={() => setMonthPickerOpen(true)}>
+          <Pressable style={({ pressed }) => [styles.sectionRow, pressedStyle(pressed)]} onPress={() => setMonthPickerOpen(true)}>
             <Text style={[styles.sectionLabel, { color: c.text }]}>
               {CONFIG.months[monthIdx]} {year}
             </Text>
@@ -103,7 +104,7 @@ export default function InformesScreen() {
 
           <View style={styles.sectionRow}>
             <Text style={[styles.sectionLabel, { color: c.text }]}>Presupuesto mensual</Text>
-            <Pressable onPress={openAjuste} style={[styles.ajusteBtn, { backgroundColor: YELLOW }]}>
+            <Pressable onPress={openAjuste} style={({ pressed }) => [styles.ajusteBtn, { backgroundColor: YELLOW }, pressedStyle(pressed, 0.8)]}>
               <Ionicons name="create-outline" size={14} color={INK} />
               <Text style={styles.ajusteLabel}>Ajuste</Text>
             </Pressable>
@@ -159,7 +160,7 @@ export default function InformesScreen() {
           <Pressable
             key={`${m.year}-${m.monthIdx}`}
             onPress={() => { setYear(m.year); setMonthIdx(m.monthIdx); setMonthPickerOpen(false); }}
-            style={[styles.monthOption, { borderColor: c.border }, m.year === year && m.monthIdx === monthIdx && { backgroundColor: c.surfaceAlt }]}
+            style={({ pressed }) => [styles.monthOption, { borderColor: c.border }, m.year === year && m.monthIdx === monthIdx && { backgroundColor: c.surfaceAlt }, pressedStyle(pressed)]}
           >
             <Text style={{ color: c.text, fontWeight: '700', textTransform: 'capitalize' }}>{CONFIG.months[m.monthIdx]} {m.year}</Text>
           </Pressable>

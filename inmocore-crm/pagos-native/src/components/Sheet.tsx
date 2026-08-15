@@ -2,6 +2,7 @@ import React, { PropsWithChildren, useEffect, useRef } from 'react';
 import { Modal, View, Text, StyleSheet, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/store/hooks';
+import { pressedStyle } from '@/src/utils/press';
 
 export default function Sheet({ visible, onClose, title, children }: PropsWithChildren<{ visible: boolean; onClose: () => void; title: string }>) {
   const c = useTheme();
@@ -23,7 +24,7 @@ export default function Sheet({ visible, onClose, title, children }: PropsWithCh
         <View style={[styles.sheet, { backgroundColor: c.surface }]}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: c.text }]}>{title}</Text>
-            <Pressable onPress={onClose} hitSlop={10}>
+            <Pressable onPress={onClose} hitSlop={10} style={({ pressed }) => pressedStyle(pressed)}>
               <Ionicons name="close" size={22} color={c.textMuted} />
             </Pressable>
           </View>

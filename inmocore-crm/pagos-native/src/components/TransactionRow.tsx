@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/store/hooks';
 import { catColor } from '@/src/theme/colors';
 import { fmtMoney, fmtDateShort } from '@/src/utils/format';
+import { pressedStyle } from '@/src/utils/press';
 import { Movimiento } from '@/src/types/models';
 
 const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -62,7 +63,7 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
   }
 
   return (
-    <Pressable onPress={onPress} style={styles.row}>
+    <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [styles.row, onPress && pressedStyle(pressed)]}>
       <View style={[styles.iconWrap, { backgroundColor: color + '22' }]}>
         <Ionicons name={categoryIcon(item.categoria)} size={18} color={color} />
       </View>

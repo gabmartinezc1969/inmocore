@@ -21,7 +21,7 @@ export default function GastosScreen() {
   const top20 = topGastos(ledger, year, undefined, 15);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <YearSwitcher year={year} onChange={setYear} />
 
       <Card>

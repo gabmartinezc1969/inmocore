@@ -12,6 +12,7 @@ import { useStore } from '@/src/store/useStore';
 import { useEnrichedLedger } from '@/src/store/hooks';
 import { allYears } from '@/src/utils/finance';
 import { CONFIG } from '@/src/config/config';
+import { pressedStyle } from '@/src/utils/press';
 import { Movimiento } from '@/src/types/models';
 
 export default function MovimientosScreen() {
@@ -77,7 +78,7 @@ export default function MovimientosScreen() {
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg }]} edges={['top']}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: c.text }]}>Movimientos</Text>
-        <Pressable onPress={openNew} style={[styles.addBtn, { backgroundColor: c.primary }]}>
+        <Pressable onPress={openNew} style={({ pressed }) => [styles.addBtn, { backgroundColor: c.primary }, pressedStyle(pressed, 0.8)]}>
           <Ionicons name="add" size={20} color="#fff" />
         </Pressable>
       </View>

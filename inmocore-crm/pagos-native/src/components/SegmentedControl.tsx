@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '@/src/store/hooks';
+import { pressedStyle } from '@/src/utils/press';
 
 export default function SegmentedControl<T extends string>({ options, value, onChange }: { options: { label: string; value: T }[]; value: T; onChange: (v: T) => void }) {
   const c = useTheme();
@@ -9,7 +10,11 @@ export default function SegmentedControl<T extends string>({ options, value, onC
       {options.map((opt) => {
         const active = opt.value === value;
         return (
-          <Pressable key={opt.value} onPress={() => onChange(opt.value)} style={[styles.segment, active && { backgroundColor: c.primary }]}>
+          <Pressable
+            key={opt.value}
+            onPress={() => onChange(opt.value)}
+            style={({ pressed }) => [styles.segment, active && { backgroundColor: c.primary }, !active && pressedStyle(pressed)]}
+          >
             <Text style={[styles.text, { color: active ? '#fff' : c.textMuted }]}>{opt.label}</Text>
           </Pressable>
         );

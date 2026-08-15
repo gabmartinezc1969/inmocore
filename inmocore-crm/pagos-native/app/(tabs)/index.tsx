@@ -23,6 +23,7 @@ import {
 } from '@/src/utils/finance';
 import { fmtMoney, fmtPct } from '@/src/utils/format';
 import { CONFIG } from '@/src/config/config';
+import { pressedStyle } from '@/src/utils/press';
 
 type Period = 'day' | 'week' | 'month' | 'year';
 const PERIODS: { label: string; value: Period }[] = [
@@ -79,10 +80,10 @@ export default function InicioScreen() {
           <Text style={[styles.brand, { color: c.text }]}>Hola 👋</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Pressable onPress={() => router.push('/informes')} style={[styles.iconBtn, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Pressable onPress={() => router.push('/informes')} style={({ pressed }) => [styles.iconBtn, { backgroundColor: c.surface, borderColor: c.border }, pressedStyle(pressed)]}>
             <Ionicons name="document-text-outline" size={18} color={c.text} />
           </Pressable>
-          <Pressable onPress={() => router.push('/configuracion')} style={[styles.iconBtn, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <Pressable onPress={() => router.push('/configuracion')} style={({ pressed }) => [styles.iconBtn, { backgroundColor: c.surface, borderColor: c.border }, pressedStyle(pressed)]}>
             <Ionicons name="settings-outline" size={18} color={c.text} />
           </Pressable>
         </View>
@@ -127,7 +128,7 @@ export default function InicioScreen() {
         <StatCard icon="wallet" label="Ahorro" value={fmtPct(tasaAhorro)} tone={tasaAhorro >= 0.1 ? 'income' : 'warning'} />
       </View>
 
-      <Pressable onPress={() => router.push('/resumen')}>
+      <Pressable onPress={() => router.push('/resumen')} style={({ pressed }) => pressedStyle(pressed)}>
         <Card style={styles.budgetCard}>
           <RingProgress pct={budgetPct} />
           <View style={{ flex: 1 }}>
@@ -142,7 +143,7 @@ export default function InicioScreen() {
         <Card>
           <View style={styles.rowBetween}>
             <Text style={[styles.cardTitle, { color: c.text }]}>Alertas recientes</Text>
-            <Pressable onPress={() => router.push('/alertas')}><Text style={[styles.link, { color: c.primary }]}>Ver todas</Text></Pressable>
+            <Pressable onPress={() => router.push('/alertas')} style={({ pressed }) => pressedStyle(pressed)}><Text style={[styles.link, { color: c.primary }]}>Ver todas</Text></Pressable>
           </View>
           <View style={{ gap: 10, marginTop: 8 }}>
             {alerts.slice(0, 2).map((a, i) => (
@@ -163,7 +164,7 @@ export default function InicioScreen() {
         <Card>
           <View style={styles.rowBetween}>
             <Text style={[styles.cardTitle, { color: c.text }]}>Próximos pagos</Text>
-            <Pressable onPress={() => router.push('/recordatorios')}><Text style={[styles.link, { color: c.primary }]}>Ver todos</Text></Pressable>
+            <Pressable onPress={() => router.push('/recordatorios')} style={({ pressed }) => pressedStyle(pressed)}><Text style={[styles.link, { color: c.primary }]}>Ver todos</Text></Pressable>
           </View>
           <View style={{ marginTop: 4 }}>
             {pending.map((p) => (
@@ -179,12 +180,12 @@ export default function InicioScreen() {
       <Card>
         <View style={styles.rowBetween}>
           <Text style={[styles.cardTitle, { color: c.text }]}>Movimientos recientes</Text>
-          <Pressable onPress={() => router.push('/(tabs)/movimientos')}><Text style={[styles.link, { color: c.primary }]}>Ver todos</Text></Pressable>
+          <Pressable onPress={() => router.push('/(tabs)/movimientos')} style={({ pressed }) => pressedStyle(pressed)}><Text style={[styles.link, { color: c.primary }]}>Ver todos</Text></Pressable>
         </View>
         {recent.length ? recent.map((r) => <TransactionRow key={r.id} item={r} />) : <EmptyState title="Aún no hay movimientos" />}
       </Card>
 
-      <Pressable onPress={() => setAddOpen(true)} style={[styles.fab, { backgroundColor: c.accent }]}>
+      <Pressable onPress={() => setAddOpen(true)} style={({ pressed }) => [styles.fab, { backgroundColor: c.accent }, pressedStyle(pressed, 0.8)]}>
         <Ionicons name="add" size={26} color="#fff" />
       </Pressable>
 

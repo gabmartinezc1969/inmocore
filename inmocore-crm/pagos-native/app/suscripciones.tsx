@@ -9,6 +9,7 @@ import { useTheme, useEnrichedLedger } from '@/src/store/hooks';
 import { useStore } from '@/src/store/useStore';
 import { detectSubscriptions } from '@/src/utils/finance';
 import { fmtMoney, fmtDateShort } from '@/src/utils/format';
+import { pressedStyle } from '@/src/utils/press';
 import { catColor } from '@/src/theme/colors';
 
 export default function SuscripcionesScreen() {
@@ -22,7 +23,7 @@ export default function SuscripcionesScreen() {
   const totalAnual = subs.reduce((s, r) => s + r.costoAnual, 0);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <View style={styles.statsRow}>
         <StatCard icon="repeat-outline" label="Costo mensual" value={fmtMoney(totalMensual)} tone="expense" />
         <StatCard icon="calendar-outline" label="Costo anual" value={fmtMoney(totalAnual)} tone="expense" />
@@ -39,7 +40,7 @@ export default function SuscripcionesScreen() {
               <Text style={[styles.meta, { color: c.textFaint }]}>{s.categoria} · {s.meses} meses · última {fmtDateShort(s.ultimaFecha)}</Text>
             </View>
             <Text style={[styles.amount, { color: c.text }]}>{fmtMoney(s.promedio)}</Text>
-            <Pressable onPress={() => dismissSubscription(s.key)} hitSlop={8} style={{ marginLeft: 10 }}>
+            <Pressable onPress={() => dismissSubscription(s.key)} hitSlop={8} style={({ pressed }) => [{ marginLeft: 10 }, pressedStyle(pressed)]}>
               <Ionicons name="close-circle" size={20} color={c.textFaint} />
             </Pressable>
           </View>

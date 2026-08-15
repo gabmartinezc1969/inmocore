@@ -96,7 +96,7 @@ export default function ConfiguracionScreen() {
   ]);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <Card>
         <Text style={[styles.title, { color: c.text }]}>Apariencia</Text>
         <Text style={[styles.sub, { color: c.textMuted }]}>Elige entre tema oscuro o claro para toda la aplicación.</Text>

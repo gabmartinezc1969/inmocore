@@ -25,7 +25,7 @@ export default function IngresosScreen() {
   const donutData = ing.rows.filter((r) => r.real > 0).map((r) => ({ label: r.categoria, value: r.real, color: catColor(r.categoria) }));
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <YearSwitcher year={year} onChange={setYear} />
 
       <View style={styles.statsRow}>

@@ -15,6 +15,7 @@ import { useTheme, useEnrichedLedger } from '@/src/store/hooks';
 import { useStore } from '@/src/store/useStore';
 import { computeFinancialScore, totalDebt } from '@/src/utils/finance';
 import { fmtMoney } from '@/src/utils/format';
+import { pressedStyle } from '@/src/utils/press';
 import { catColor } from '@/src/theme/colors';
 import { Activo, TipoActivo } from '@/src/types/models';
 
@@ -54,7 +55,7 @@ export default function PatrimonioScreen() {
   const save = () => { if (editing) updateActivo(editing.id, draft); else addActivo(draft); setOpen(false); };
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <View style={styles.statsRow}>
         <StatCard icon="wallet-outline" label="Patrimonio neto" value={fmtMoney(patrimonioNeto)} tone={patrimonioNeto >= 0 ? 'income' : 'expense'} />
         <StatCard icon="albums-outline" label="Activos" value={fmtMoney(activosTotal)} />
@@ -85,7 +86,7 @@ export default function PatrimonioScreen() {
       </View>
       {assets.length ? assets.map((a) => (
         <Card key={a.id}>
-          <Pressable onPress={() => openEdit(a)} style={styles.rowBetween}>
+          <Pressable onPress={() => openEdit(a)} style={({ pressed }) => [styles.rowBetween, pressedStyle(pressed)]}>
             <View>
               <Text style={[styles.assetName, { color: c.text }]}>{a.nombre}</Text>
               <Text style={[styles.small, { color: c.textFaint }]}>{a.tipo}</Text>

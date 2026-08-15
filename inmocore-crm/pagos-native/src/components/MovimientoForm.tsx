@@ -10,6 +10,7 @@ import Chip from './Chip';
 import Button from './Button';
 import { useTheme } from '@/src/store/hooks';
 import { CONFIG } from '@/src/config/config';
+import { pressedStyle } from '@/src/utils/press';
 import { Movimiento, TipoMovimiento } from '@/src/types/models';
 
 export interface MovimientoDraft {
@@ -82,7 +83,7 @@ export default function MovimientoForm({
 
       <View style={styles.dateRow}>
         <Text style={[styles.label, { color: c.textMuted }]}>Fecha</Text>
-        <Pressable onPress={() => setShowPicker(true)} style={[styles.dateBtn, { borderColor: c.border, backgroundColor: c.surfaceAlt }]}>
+        <Pressable onPress={() => setShowPicker(true)} style={({ pressed }) => [styles.dateBtn, { borderColor: c.border, backgroundColor: c.surfaceAlt }, pressedStyle(pressed)]}>
           <Ionicons name="calendar-outline" size={16} color={c.textMuted} />
           <Text style={{ color: c.text, fontWeight: '600' }}>{draft.fecha}</Text>
         </Pressable>

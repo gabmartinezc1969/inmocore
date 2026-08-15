@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useStore } from '@/src/store/useStore';
+import { pressedStyle } from '@/src/utils/press';
 
 const { width } = Dimensions.get('window');
 
@@ -50,7 +51,7 @@ export default function Onboarding() {
             <View style={styles.dot} />
             <View style={styles.dot} />
           </View>
-          <Pressable onPress={start} style={styles.cta}>
+          <Pressable onPress={start} style={({ pressed }) => [styles.cta, pressedStyle(pressed, 0.85)]}>
             <Text style={styles.ctaText}>Comenzar</Text>
             <Ionicons name="arrow-forward" size={18} color="#fff" />
           </Pressable>

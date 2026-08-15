@@ -30,7 +30,7 @@ const OUT_OF_SCOPE = [
 export default function AcercaScreen() {
   const c = useTheme();
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <Text style={[styles.lead, { color: c.textMuted }]}>
         Pagos es tu centro financiero personal: ingresos, gastos, deudas, patrimonio e inversiones en
         un solo lugar. Esta app nativa reimplementa la versión web (`pagos.html`) con el mismo modelo

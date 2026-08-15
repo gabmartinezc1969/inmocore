@@ -14,6 +14,7 @@ import { useTheme, useEnrichedLedger } from '@/src/store/hooks';
 import { useStore } from '@/src/store/useStore';
 import { amortizationStatus, creditRealPayments, totalDebt } from '@/src/utils/finance';
 import { fmtMoney } from '@/src/utils/format';
+import { pressedStyle } from '@/src/utils/press';
 import { Credito, TipoCredito } from '@/src/types/models';
 
 const TIPOS: TipoCredito[] = ['Hipotecario', 'Automotriz', 'Personal', 'Otro'];
@@ -44,7 +45,7 @@ export default function DeudasScreen() {
   const deudaTotal = totalDebt(credits);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <View style={styles.statsRow}>
         <StatCard icon="card-outline" label="Deuda total" value={fmtMoney(deudaTotal)} tone="expense" />
         <StatCard icon="albums-outline" label="Créditos activos" value={String(credits.length)} />
@@ -62,7 +63,7 @@ export default function DeudasScreen() {
         const pagos = creditRealPayments(cr, ledger);
         return (
           <Card key={cr.id}>
-            <Pressable onPress={() => openEdit(cr)}>
+            <Pressable onPress={() => openEdit(cr)} style={({ pressed }) => pressedStyle(pressed)}>
               <View style={styles.rowBetween}>
                 <Text style={[styles.creditName, { color: c.text }]}>{cr.nombre}</Text>
                 <Ionicons name="create-outline" size={16} color={c.textFaint} />

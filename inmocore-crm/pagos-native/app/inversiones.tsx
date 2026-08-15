@@ -13,6 +13,7 @@ import { useTheme, useEnrichedLedger } from '@/src/store/hooks';
 import { useStore } from '@/src/store/useStore';
 import { filterRows, realSum, allYears } from '@/src/utils/finance';
 import { fmtMoney, fmtPct } from '@/src/utils/format';
+import { pressedStyle } from '@/src/utils/press';
 import { catColor } from '@/src/theme/colors';
 import BarChart from '@/src/components/charts/BarChart';
 import { Inversion } from '@/src/types/models';
@@ -46,7 +47,7 @@ export default function InversionesScreen() {
   const save = () => { if (editing) updateInversion(editing.id, draft); else addInversion(draft); setOpen(false); };
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <View style={styles.statsRow}>
         <StatCard icon="stats-chart-outline" label="Valor actual" value={fmtMoney(valorTotal)} tone="income" />
         <StatCard icon="trending-up-outline" label="Rendimiento" value={fmtPct(rendimiento)} tone={rendimiento >= 0 ? 'income' : 'expense'} />
@@ -71,7 +72,7 @@ export default function InversionesScreen() {
         const gan = i.capital > 0 ? (i.valorActual - i.capital) / i.capital : 0;
         return (
           <Card key={i.id}>
-            <Pressable onPress={() => openEdit(i)} style={styles.rowBetween}>
+            <Pressable onPress={() => openEdit(i)} style={({ pressed }) => [styles.rowBetween, pressedStyle(pressed)]}>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>{i.nombre}</Text>
                 <Text style={[styles.sub, { color: c.textFaint, marginTop: 2 }]}>Capital {fmtMoney(i.capital)}</Text>

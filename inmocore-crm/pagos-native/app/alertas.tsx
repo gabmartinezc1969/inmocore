@@ -13,7 +13,7 @@ export default function AlertasScreen() {
   const alerts = useMemo(() => computeAlerts(ledger), [ledger]);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       {alerts.length ? alerts.map((a, i) => (
         <Card key={i}>
           <View style={styles.row}>

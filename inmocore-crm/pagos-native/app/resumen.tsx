@@ -26,7 +26,7 @@ export default function ResumenScreen() {
   const budgetRows = egr.rows.filter((r) => r.presupuesto > 0).sort((a, b) => b.presupuesto - a.presupuesto).slice(0, 8);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <MonthSwitcher year={year} monthIdx={monthIdx} onChange={(y, m) => { setYear(y); setMonthIdx(m); }} />
 
       <View style={styles.statsRow}>

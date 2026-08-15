@@ -35,7 +35,7 @@ export default function RecordatoriosScreen() {
   ) : null;
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <Group title="Vencidos" items={vencidos} tone="expense" />
       <Group title="Próximos 7 días" items={proximos} tone="warning" />
       <Group title="Programados" items={futuros} tone="neutral" />

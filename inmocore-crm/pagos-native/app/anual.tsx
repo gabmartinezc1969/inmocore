@@ -34,7 +34,7 @@ export default function AnualScreen() {
   const hasData = monthly.some((m) => m.ing > 0 || m.egr > 0);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['bottom']}>
       <YearSwitcher year={year} onChange={setYear} />
 
       <View style={styles.statsRow}>

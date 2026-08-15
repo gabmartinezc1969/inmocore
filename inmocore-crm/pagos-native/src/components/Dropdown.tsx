@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-n
 import { Ionicons } from '@expo/vector-icons';
 import Sheet from './Sheet';
 import { useTheme } from '@/src/store/hooks';
+import { pressedStyle } from '@/src/utils/press';
 
 export interface DropdownOption {
   label: string;
@@ -31,7 +32,7 @@ export default function Dropdown({
     <>
       <Pressable
         onPress={() => setOpen(true)}
-        style={[styles.trigger, { backgroundColor: c.surfaceAlt, borderColor: c.border }, style]}
+        style={({ pressed }) => [styles.trigger, { backgroundColor: c.surfaceAlt, borderColor: c.border }, style, pressedStyle(pressed)]}
       >
         {icon ? <Ionicons name={icon} size={15} color={c.textMuted} /> : null}
         <Text style={[styles.label, { color: c.text }]} numberOfLines={1}>{current?.label ?? '—'}</Text>
@@ -46,7 +47,7 @@ export default function Dropdown({
               <Pressable
                 key={opt.value}
                 onPress={() => { onChange(opt.value); setOpen(false); }}
-                style={[styles.option, { borderColor: active ? c.primary : c.border, backgroundColor: active ? c.primarySoft : 'transparent' }]}
+                style={({ pressed }) => [styles.option, { borderColor: active ? c.primary : c.border, backgroundColor: active ? c.primarySoft : 'transparent' }, pressedStyle(pressed)]}
               >
                 <Text style={[styles.optionLabel, { color: active ? c.primary : c.text }]}>{opt.label}</Text>
                 {active ? <Ionicons name="checkmark" size={18} color={c.primary} /> : null}
