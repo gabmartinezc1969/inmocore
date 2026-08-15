@@ -67,7 +67,7 @@ export default function DeudasScreen() {
           <Card key={cr.id}>
             <Pressable onPress={() => openEdit(cr)} style={({ pressed }) => pressedStyle(pressed)}>
               <View style={styles.rowBetween}>
-                <Text style={[styles.creditName, { color: c.text }]}>{cr.nombre}</Text>
+                <Text style={[styles.creditName, { color: c.text, flex: 1, marginRight: 8 }]} numberOfLines={1}>{cr.nombre}</Text>
                 <Ionicons name="create-outline" size={16} color={c.textFaint} />
               </View>
               <Text style={[styles.creditMeta, { color: c.textMuted }]}>{cr.tipo} · {cr.tasa}% anual · {cr.plazo} meses</Text>

@@ -89,8 +89,8 @@ export default function PatrimonioScreen() {
       {assets.length ? assets.map((a) => (
         <Card key={a.id}>
           <Pressable onPress={() => openEdit(a)} style={({ pressed }) => [styles.rowBetween, pressedStyle(pressed)]}>
-            <View>
-              <Text style={[styles.assetName, { color: c.text }]}>{a.nombre}</Text>
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={[styles.assetName, { color: c.text }]} numberOfLines={1}>{a.nombre}</Text>
               <Text style={[styles.small, { color: c.textFaint }]}>{a.tipo}</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
