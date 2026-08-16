@@ -6,6 +6,7 @@ import Sheet from './Sheet';
 import { FormField, FormSwitch } from './FormField';
 import SegmentedControl from './SegmentedControl';
 import CategoryPicker from './CategoryPicker';
+import Calculator from './Calculator';
 import Chip from './Chip';
 import Button from './Button';
 import { useTheme } from '@/src/store/hooks';
@@ -62,15 +63,42 @@ export default function MovimientoForm({
   const c = useTheme();
   const [draft, setDraft] = useState<MovimientoDraft>(initial ?? emptyDraft());
   const [showPicker, setShowPicker] = useState(false);
+  const [calcOpen, setCalcOpen] = useState(false);
 
   // Reset the draft only when the sheet transitions to open — `initial` is
   // rebuilt on every parent render (e.g. `emptyDraft()` inline), so keying
   // off it too would wipe whatever the user is typing on unrelated re-renders.
-  React.useEffect(() => { if (visible) setDraft(initial ?? emptyDraft()); }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { if (visible) { setDraft(initial ?? emptyDraft()); setCalcOpen(false); } }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const set = <K extends keyof MovimientoDraft>(k: K, v: MovimientoDraft[K]) => setDraft((d) => ({ ...d, [k]: v }));
 
   const dateObj = new Date(draft.fecha + 'T00:00:00');
+
+  // Picking a category template pulls up the calculator so the amount can
+  // be keyed in right away; confirming it hides the calculator again.
+  const handleCategoryChange = (v: string) => {
+    set('categoria', v);
+    setCalcOpen(true);
+  };
+
+  const handleCalcConfirm = (value: number) => {
+    set('monto', value ? String(value) : '');
+    setCalcOpen(false);
+  };
+
+  if (calcOpen) {
+    return (
+      <Sheet visible={visible} onClose={onClose} title={draft.categoria}>
+        <Calculator
+          categoryLabel={draft.categoria}
+          initialValue={draft.monto}
+          tone={draft.tipo === 'I' ? 'income' : 'expense'}
+          onConfirm={handleCalcConfirm}
+          onCancel={() => setCalcOpen(false)}
+        />
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet visible={visible} onClose={onClose} title={title}>
@@ -99,7 +127,7 @@ export default function MovimientoForm({
         />
       )}
 
-      <CategoryPicker tipo={draft.tipo} value={draft.categoria} onChange={(v) => set('categoria', v)} />
+      <CategoryPicker tipo={draft.tipo} value={draft.categoria} onChange={handleCategoryChange} />
 
       <FormField label="Concepto" value={draft.concepto} onChangeText={(v) => set('concepto', v)} placeholder="Ej. Supermercado" />
 
