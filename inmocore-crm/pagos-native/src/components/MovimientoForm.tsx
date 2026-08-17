@@ -7,11 +7,13 @@ import Sheet from './Sheet';
 import { FormField, FormSwitch } from './FormField';
 import SegmentedControl from './SegmentedControl';
 import CategoryPicker from './CategoryPicker';
+import AmountCalculator from './AmountCalculator';
 import Chip from './Chip';
 import Button from './Button';
 import { useTheme } from '@/src/store/hooks';
 import { CONFIG } from '@/src/config/config';
 import { pressedStyle } from '@/src/utils/press';
+import { fmtMoney } from '@/src/utils/format';
 import { Movimiento, TipoMovimiento } from '@/src/types/models';
 
 export interface MovimientoDraft {
@@ -64,11 +66,14 @@ export default function MovimientoForm({
   const c = useTheme();
   const [draft, setDraft] = useState<MovimientoDraft>(initial ?? emptyDraft());
   const [showPicker, setShowPicker] = useState(false);
+  const [calcOpen, setCalcOpen] = useState(false);
 
   // Reset the draft only when the sheet transitions to open — `initial` is
   // rebuilt on every parent render (e.g. `emptyDraft()` inline), so keying
   // off it too would wipe whatever the user is typing on unrelated re-renders.
-  React.useEffect(() => { if (visible) setDraft(initial ?? emptyDraft()); }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    if (visible) { setDraft(initial ?? emptyDraft()); setCalcOpen(false); }
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const set = <K extends keyof MovimientoDraft>(k: K, v: MovimientoDraft[K]) => setDraft((d) => ({ ...d, [k]: v }));
 
@@ -101,36 +106,58 @@ export default function MovimientoForm({
         />
       )}
 
-      <CategoryPicker tipo={draft.tipo} value={draft.categoria} onChange={(v) => set('categoria', v)} />
+      <CategoryPicker
+        tipo={draft.tipo}
+        value={draft.categoria}
+        onChange={(v) => { set('categoria', v); setCalcOpen(true); }}
+      />
 
-      <FormField label="Concepto" value={draft.concepto} onChangeText={(v) => set('concepto', v)} placeholder="Ej. Supermercado" />
-
-      <View style={styles.row2}>
-        <FormField
-          label="Presupuesto" style={{ flex: 1 }} value={draft.presupuesto} onChangeText={(v) => set('presupuesto', v)}
-          keyboardType="decimal-pad" placeholder="0"
+      {calcOpen ? (
+        <AmountCalculator
+          initialValue={draft.monto}
+          onCancel={() => setCalcOpen(false)}
+          onConfirm={(v) => { set('monto', v); setCalcOpen(false); }}
         />
-        <FormField
-          label="Real (vacío o 0 = pendiente)" style={{ flex: 1 }} value={draft.monto} onChangeText={(v) => set('monto', v)}
-          keyboardType="decimal-pad" placeholder="0"
-        />
-      </View>
+      ) : (
+        <>
+          <FormField label="Concepto" value={draft.concepto} onChangeText={(v) => set('concepto', v)} placeholder="Ej. Supermercado" />
 
-      <View style={styles.wrap}>
-        <Text style={[styles.label, { color: c.textMuted }]}>Método de pago</Text>
-        <View style={styles.chips}>
-          {CONFIG.paymentMethods.map((mp) => (
-            <Chip key={mp} label={mp} active={draft.metodoPago === mp} onPress={() => set('metodoPago', draft.metodoPago === mp ? '' : mp)} />
-          ))}
-        </View>
-      </View>
+          <View style={styles.row2}>
+            <FormField
+              label="Presupuesto" style={{ flex: 1 }} value={draft.presupuesto} onChangeText={(v) => set('presupuesto', v)}
+              keyboardType="decimal-pad" placeholder="0"
+            />
+            <View style={{ flex: 1, gap: 6 }}>
+              <Text style={[styles.label, { color: c.textMuted }]}>Real (vacío o 0 = pendiente)</Text>
+              <Pressable
+                onPress={() => setCalcOpen(true)}
+                style={({ pressed }) => [styles.amountBtn, { borderColor: c.border, backgroundColor: c.surfaceAlt }, pressedStyle(pressed)]}
+              >
+                <Text style={{ color: c.text, fontWeight: '700' }} numberOfLines={1}>
+                  {draft.monto.trim() ? fmtMoney(parseFloat(draft.monto) || 0) : '0'}
+                </Text>
+                <Ionicons name="calculator-outline" size={16} color={c.textMuted} />
+              </Pressable>
+            </View>
+          </View>
 
-      <FormSwitch label="Gasto deducible" value={draft.deducible} onValueChange={(v) => set('deducible', v)} />
+          <View style={styles.wrap}>
+            <Text style={[styles.label, { color: c.textMuted }]}>Método de pago</Text>
+            <View style={styles.chips}>
+              {CONFIG.paymentMethods.map((mp) => (
+                <Chip key={mp} label={mp} active={draft.metodoPago === mp} onPress={() => set('metodoPago', draft.metodoPago === mp ? '' : mp)} />
+              ))}
+            </View>
+          </View>
 
-      <View style={styles.actions}>
-        {onDelete ? <Button label="Eliminar" variant="danger" icon="trash-outline" onPress={onDelete} style={{ flex: 1 }} /> : null}
-        <Button label="Guardar" variant="primary" icon="checkmark" onPress={() => onSave(draft)} style={{ flex: 1 }} />
-      </View>
+          <FormSwitch label="Gasto deducible" value={draft.deducible} onValueChange={(v) => set('deducible', v)} />
+
+          <View style={styles.actions}>
+            {onDelete ? <Button label="Eliminar" variant="danger" icon="trash-outline" onPress={onDelete} style={{ flex: 1 }} /> : null}
+            <Button label="Guardar" variant="primary" icon="checkmark" onPress={() => onSave(draft)} style={{ flex: 1 }} />
+          </View>
+        </>
+      )}
     </Sheet>
   );
 }
@@ -139,6 +166,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 12.5, fontWeight: '700' },
   dateRow: { gap: 8 },
   dateBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, alignSelf: 'flex-start' },
+  amountBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11 },
   row2: { flexDirection: 'row', gap: 12 },
   wrap: { gap: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
