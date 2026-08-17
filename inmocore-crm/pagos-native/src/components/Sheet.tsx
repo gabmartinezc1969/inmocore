@@ -1,10 +1,23 @@
-import React, { PropsWithChildren } from 'react';
-import { Modal, View, Text, StyleSheet, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { PropsWithChildren, useEffect, useRef } from 'react';
+import { Modal, View, StyleSheet, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/store/hooks';
+import { pressedStyle } from '@/src/utils/press';
 
 export default function Sheet({ visible, onClose, title, children }: PropsWithChildren<{ visible: boolean; onClose: () => void; title: string }>) {
   const c = useTheme();
+  const scrollRef = useRef<ScrollView>(null);
+
+  // <Modal visible={false}> keeps its children mounted — it just hides the
+  // native view — so the inner ScrollView keeps whatever scroll offset was
+  // left from the last time this sheet was open. Without this, reopening
+  // it (e.g. to edit a different movimiento right after scrolling down in
+  // a previous one) lands already scrolled past the top fields.
+  useEffect(() => {
+    if (visible) scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [visible]);
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
@@ -12,11 +25,11 @@ export default function Sheet({ visible, onClose, title, children }: PropsWithCh
         <View style={[styles.sheet, { backgroundColor: c.surface }]}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: c.text }]}>{title}</Text>
-            <Pressable onPress={onClose} hitSlop={10}>
+            <Pressable onPress={onClose} hitSlop={10} style={({ pressed }) => pressedStyle(pressed)}>
               <Ionicons name="close" size={22} color={c.textMuted} />
             </Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>
         </View>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet, ViewStyle, ActivityIndicator } from 'react-native';
+import { Pressable, StyleSheet, ViewStyle, ActivityIndicator } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/store/hooks';
 

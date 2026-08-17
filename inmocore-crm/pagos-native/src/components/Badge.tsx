@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import { useTheme } from '@/src/store/hooks';
 
 export default function Badge({ text, tone = 'neutral' }: { text: string; tone?: 'neutral' | 'income' | 'expense' | 'warning' }) {

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import ProgressBar from '@/src/components/ProgressBar';
@@ -26,7 +28,8 @@ export default function ResumenScreen() {
   const budgetRows = egr.rows.filter((r) => r.presupuesto > 0).sort((a, b) => b.presupuesto - a.presupuesto).slice(0, 8);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Resumen mensual" />
       <MonthSwitcher year={year} monthIdx={monthIdx} onChange={(y, m) => { setYear(y); setMonthIdx(m); }} />
 
       <View style={styles.statsRow}>
@@ -41,8 +44,8 @@ export default function ResumenScreen() {
         {budgetRows.length ? budgetRows.map((r) => (
           <View key={r.categoria} style={styles.budgetRow}>
             <View style={styles.rowBetween}>
-              <Text style={[styles.catLabel, { color: c.text }]} numberOfLines={1}>{r.categoria}</Text>
-              <Text style={[styles.catValue, { color: c.textMuted }]}>{fmtMoney(r.real)} / {fmtMoney(r.presupuesto)}</Text>
+              <Text style={[styles.catLabel, { color: c.text, flex: 1, marginRight: 8 }]} numberOfLines={1}>{r.categoria}</Text>
+              <Text style={[styles.catValue, { color: c.textMuted }]} numberOfLines={1}>{fmtMoney(r.real)} / {fmtMoney(r.presupuesto)}</Text>
             </View>
             <ProgressBar pct={r.presupuesto ? r.real / r.presupuesto : 0} />
           </View>

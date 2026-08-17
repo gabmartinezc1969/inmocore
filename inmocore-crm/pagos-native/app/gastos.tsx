@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import ProgressBar from '@/src/components/ProgressBar';
 import { YearSwitcher } from '@/src/components/MonthSwitcher';
@@ -21,7 +23,8 @@ export default function GastosScreen() {
   const top20 = topGastos(ledger, year, undefined, 15);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Gastos" />
       <YearSwitcher year={year} onChange={setYear} />
 
       <Card>

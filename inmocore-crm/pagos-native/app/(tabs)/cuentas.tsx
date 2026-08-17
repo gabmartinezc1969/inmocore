@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import Text from '@/src/components/AppText';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -14,6 +15,7 @@ import { useStore } from '@/src/store/useStore';
 import { useEnrichedLedger } from '@/src/store/hooks';
 import { targetYearMonth, categoryTable, totalDebt } from '@/src/utils/finance';
 import { fmtMoney } from '@/src/utils/format';
+import { pressedStyle } from '@/src/utils/press';
 
 // First row mirrors the reference mock's single-row "popular operations"
 // (All / Health / Travel / Food) — the rest live one tap away in Más.
@@ -47,7 +49,7 @@ export default function CuentasScreen() {
       <SectionHeader title="Mis tarjetas" subtitle="Un vistazo a tu dinero" />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cardsRow}>
-        <Pressable onPress={() => setAddOpen(true)} style={[styles.addCard, { borderColor: c.border, backgroundColor: c.surfaceAlt }]}>
+        <Pressable onPress={() => setAddOpen(true)} style={({ pressed }) => [styles.addCard, { borderColor: c.border, backgroundColor: c.surfaceAlt }, pressedStyle(pressed)]}>
           <View style={[styles.addCardIcon, { backgroundColor: c.primarySoft }]}>
             <Ionicons name="add" size={22} color={c.primary} />
           </View>
@@ -85,13 +87,13 @@ export default function CuentasScreen() {
       <View>
         <View style={styles.rowBetween}>
           <Text style={[styles.opsTitle, { color: c.text }]}>Operaciones frecuentes</Text>
-          <Pressable onPress={() => router.push('/(tabs)/mas')}>
+          <Pressable onPress={() => router.push('/(tabs)/mas')} style={({ pressed }) => pressedStyle(pressed)}>
             <Text style={[styles.link, { color: c.primary }]}>Ver todas</Text>
           </Pressable>
         </View>
         <View style={styles.opsRow}>
           {OPS.map((op) => (
-            <Pressable key={op.href} onPress={() => router.push(op.href as any)} style={styles.opItem}>
+            <Pressable key={op.href} onPress={() => router.push(op.href as any)} style={({ pressed }) => [styles.opItem, pressedStyle(pressed)]}>
               <View style={[styles.opIcon, { backgroundColor: c.primarySoft }]}>
                 <Ionicons name={op.icon} size={20} color={c.primary} />
               </View>
@@ -104,7 +106,7 @@ export default function CuentasScreen() {
       <Card>
         <View style={styles.rowBetween}>
           <Text style={[styles.cardTitleDark, { color: c.text }]}>Transacciones</Text>
-          <Pressable onPress={() => router.push('/(tabs)/movimientos')}>
+          <Pressable onPress={() => router.push('/(tabs)/movimientos')} style={({ pressed }) => pressedStyle(pressed)}>
             <Text style={[styles.link, { color: c.primary }]}>Ver todas</Text>
           </Pressable>
         </View>

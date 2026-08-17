@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import Badge from '@/src/components/Badge';
 import EmptyState from '@/src/components/EmptyState';
@@ -13,7 +15,8 @@ export default function AlertasScreen() {
   const alerts = useMemo(() => computeAlerts(ledger), [ledger]);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Alertas" />
       {alerts.length ? alerts.map((a, i) => (
         <Card key={i}>
           <View style={styles.row}>

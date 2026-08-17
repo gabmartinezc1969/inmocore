@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/store/hooks';
 import { catColor } from '@/src/theme/colors';
 import { fmtMoney, fmtDateShort } from '@/src/utils/format';
+import { pressedStyle } from '@/src/utils/press';
 import { Movimiento } from '@/src/types/models';
 
 const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -33,9 +35,36 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
   const c = useTheme();
   const color = catColor(item.categoria);
   const isIncome = item.tipo === 'I';
-  const pending = item.monto === null;
+  // Treat an explicit 0 the same as "sin dato" (null): a lot of the real
+  // ledger's future/unconfirmed rows are stored as monto=0 rather than
+  // null, and showing those as a real "−$0" expense in red reads as an
+  // actual (if tiny) charge instead of "nothing happened here yet".
+  const pending = item.monto === null || item.monto === 0;
+  const paidAsBudgeted = !pending && item.presupuesto > 0 && item.monto === item.presupuesto;
+
+  let statusLabel: string | null = null;
+  let statusColor = c.textFaint;
+  let amountText: string;
+  let amountColor: string;
+  if (pending) {
+    // A pending row hasn't happened yet — show what's expected to be
+    // paid/received (the budget) instead of a bare "Pendiente" with no
+    // number to act on.
+    statusLabel = 'Pendiente';
+    amountText = fmtMoney(item.presupuesto);
+    amountColor = c.textFaint;
+  } else if (paidAsBudgeted) {
+    statusLabel = 'Pagado';
+    statusColor = c.income;
+    amountText = `${isIncome ? '+' : '−'} ${fmtMoney(Math.abs(item.monto || 0))}`;
+    amountColor = isIncome ? c.income : c.expense;
+  } else {
+    amountText = `${isIncome ? '+' : '−'} ${fmtMoney(Math.abs(item.monto || 0))}`;
+    amountColor = isIncome ? c.income : c.expense;
+  }
+
   return (
-    <Pressable onPress={onPress} style={styles.row}>
+    <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [styles.row, onPress && pressedStyle(pressed)]}>
       <View style={[styles.iconWrap, { backgroundColor: color + '22' }]}>
         <Ionicons name={categoryIcon(item.categoria)} size={18} color={color} />
       </View>
@@ -43,9 +72,10 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
         <Text style={[styles.concepto, { color: c.text }]} numberOfLines={1}>{item.concepto}</Text>
         <Text style={[styles.meta, { color: c.textFaint }]} numberOfLines={1}>{item.categoria} · {fmtDateShort(item.fecha)}</Text>
       </View>
-      <Text style={[styles.amount, { color: pending ? c.textFaint : isIncome ? c.income : c.expense }]}>
-        {pending ? 'Pendiente' : `${isIncome ? '+' : '−'} ${fmtMoney(Math.abs(item.monto || 0))}`}
-      </Text>
+      <View style={styles.amountWrap}>
+        {statusLabel ? <Text style={[styles.status, { color: statusColor }]}>{statusLabel}</Text> : null}
+        <Text style={[styles.amount, { color: amountColor }]}>{amountText}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -55,5 +85,7 @@ const styles = StyleSheet.create({
   iconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   concepto: { fontSize: 14.5, fontWeight: '700' },
   meta: { fontSize: 12, marginTop: 2 },
+  amountWrap: { alignItems: 'flex-end' },
+  status: { fontSize: 11, fontWeight: '700', marginBottom: 1 },
   amount: { fontSize: 13.5, fontWeight: '800' },
 });

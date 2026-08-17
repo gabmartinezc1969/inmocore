@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Redirect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { FormField } from '@/src/components/FormField';

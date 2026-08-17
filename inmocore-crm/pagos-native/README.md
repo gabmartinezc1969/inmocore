@@ -43,6 +43,27 @@ propio. Se verificó exportando el bundle de producción para iOS y Android
    npm run start:tunnel
    ```
 
+## Generar un APK para instalar en Android
+
+No requiere Android Studio ni SDK local — usa **EAS Build**, el servicio de
+compilación en la nube de Expo (gratis para este tipo de builds internas):
+
+```bash
+npm install -g eas-cli
+eas login              # con tu cuenta de Expo (crea una gratis si no tienes)
+eas build --platform android --profile preview
+```
+
+El perfil `preview` (ya configurado en `eas.json`) genera un **.apk** listo
+para instalar directamente (a diferencia de un `.aab`, que solo sirve para
+subir a Google Play). Al terminar la compilación (~10–15 min), la terminal
+te da un enlace de descarga — ábrelo desde el teléfono Android y toca
+"Instalar" (puede pedirte habilitar "Instalar apps de fuentes desconocidas"
+la primera vez).
+
+Para publicar en Google Play más adelante, usa el perfil `production`
+(genera `.aab`) y `eas submit`.
+
 ## Estructura
 
 ```
@@ -59,6 +80,8 @@ src/
   types/models.ts         Movimiento, Crédito, Activo, Inversión, Settings
   config/config.ts         Categorías, meses, métodos de pago (espejo de config.js de la web)
   data/seedData.ts         Datos de demostración genéricos (no son datos reales de nadie)
+  data/pagos2026-seed.json  Respaldo real (pagos2026_data_v4_1.json) empaquetado como dato inicial
+  data/pagos2026Seed.ts     Mapea el respaldo real al modelo Movimiento/Credito/Inversion/Activo
   store/useStore.ts         Estado global (zustand + persistencia)
   store/hooks.ts             useTheme(), useEnrichedLedger()
   utils/finance.ts           Agregaciones, score financiero, amortización francesa, alertas,
@@ -78,10 +101,12 @@ npm run typecheck  # tsc --noEmit
 ## Alcance
 
 **✅ Implementado por completo:** movimientos (alta/edición/filtros), Inicio,
-Resumen mensual, Dashboard anual, Ingresos, Gastos, Créditos y deudas
+Informes (presupuesto mensual con anillo de balance disponible), Resumen
+mensual, Dashboard anual, Ingresos, Gastos, Créditos y deudas
 (amortización francesa), Patrimonio y score financiero, Inversiones,
 detección automática de Suscripciones, Recordatorios, Alertas, tema
-claro/oscuro, PIN de acceso y exportar/importar respaldo en JSON.
+claro/oscuro, tamaño de texto ajustable, PIN de acceso, exportar/importar
+respaldo en JSON, y copiar/borrar un mes específico desde Configuración.
 
 **🟡 Versión simplificada frente a la web:** las gráficas usan un motor
 propio en SVG en vez de Chart.js; Gastos muestra concentración por
@@ -94,9 +119,22 @@ multiusuario — requieren un backend o servicio de terceros que esta app,
 100% local, no incorpora. El detalle completo vive en la pantalla
 **Más → Acerca de Pagos** dentro de la app.
 
-## Datos de ejemplo
+## Datos iniciales
 
-La primera vez que se abre la app se carga un libro contable de
-demostración con cifras genéricas e ilustrativas (no son datos reales de
-ningún usuario). Se reemplaza automáticamente en cuanto agregas tus propios
-movimientos, o puedes restaurarlo/borrarlo desde **Configuración**.
+La primera vez que se abre la app se carga el libro contable real
+exportado en `pagos2026_data_v4_1.json` (1,034 movimientos 2025–2026, un
+crédito hipotecario y una inversión en Cetes), empaquetado en
+`src/data/pagos2026-seed.json`. Desde **Configuración** puedes exportar tu
+propio respaldo en cualquier momento, importar uno distinto, o restaurar un
+set de datos de demostración genérico (`src/data/seedData.ts`) si prefieres
+partir de cero.
+
+## Informes
+
+La pantalla **Informes** (accesible desde Inicio o Más → Análisis)
+reproduce el mockup de referencia: encabezado amarillo, totales de Gastos e
+Ingreso del mes seleccionado, y una tarjeta "Presupuesto mensual" con un
+anillo que muestra qué porcentaje de tu presupuesto objetivo sigue
+disponible (Balance = Presupuesto − Gastos). El presupuesto mensual es un
+monto libre que defines con el botón **Ajuste** — independiente de los
+presupuestos por categoría usados en Resumen mensual.

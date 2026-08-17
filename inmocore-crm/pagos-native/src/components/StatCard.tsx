@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import Card from './Card';
 import { useTheme } from '@/src/store/hooks';
@@ -29,7 +30,12 @@ export default function StatCard({
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, minWidth: 150, gap: 6 },
+  // No minWidth: three of these in a row (Resumen, Anual, Inicio,
+  // Patrimonio) at 150px each plus gaps add up to well over most phone
+  // screen widths, pushing the last card off-screen. flex: 1 alone
+  // already splits the row evenly; numberOfLines on the label/value
+  // handles anything that doesn't fit.
+  card: { flex: 1, gap: 6 },
   iconWrap: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
   label: { fontSize: 12, fontWeight: '600' },
   value: { fontSize: 19, fontWeight: '800' },

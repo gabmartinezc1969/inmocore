@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import Button from '@/src/components/Button';
@@ -15,6 +17,7 @@ import { useTheme, useEnrichedLedger } from '@/src/store/hooks';
 import { useStore } from '@/src/store/useStore';
 import { computeFinancialScore, totalDebt } from '@/src/utils/finance';
 import { fmtMoney } from '@/src/utils/format';
+import { pressedStyle } from '@/src/utils/press';
 import { catColor } from '@/src/theme/colors';
 import { Activo, TipoActivo } from '@/src/types/models';
 
@@ -54,7 +57,8 @@ export default function PatrimonioScreen() {
   const save = () => { if (editing) updateActivo(editing.id, draft); else addActivo(draft); setOpen(false); };
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Patrimonio y score" />
       <View style={styles.statsRow}>
         <StatCard icon="wallet-outline" label="Patrimonio neto" value={fmtMoney(patrimonioNeto)} tone={patrimonioNeto >= 0 ? 'income' : 'expense'} />
         <StatCard icon="albums-outline" label="Activos" value={fmtMoney(activosTotal)} />
@@ -85,9 +89,9 @@ export default function PatrimonioScreen() {
       </View>
       {assets.length ? assets.map((a) => (
         <Card key={a.id}>
-          <Pressable onPress={() => openEdit(a)} style={styles.rowBetween}>
-            <View>
-              <Text style={[styles.assetName, { color: c.text }]}>{a.nombre}</Text>
+          <Pressable onPress={() => openEdit(a)} style={({ pressed }) => [styles.rowBetween, pressedStyle(pressed)]}>
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={[styles.assetName, { color: c.text }]} numberOfLines={1}>{a.nombre}</Text>
               <Text style={[styles.small, { color: c.textFaint }]}>{a.tipo}</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

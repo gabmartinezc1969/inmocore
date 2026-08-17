@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/src/store/hooks';
 import { CONFIG } from '@/src/config/config';
+import { pressedStyle } from '@/src/utils/press';
 
 export default function MonthSwitcher({ year, monthIdx, onChange }: { year: number; monthIdx: number; onChange: (year: number, monthIdx: number) => void }) {
   const c = useTheme();
@@ -14,9 +16,9 @@ export default function MonthSwitcher({ year, monthIdx, onChange }: { year: numb
   };
   return (
     <View style={[styles.wrap, { backgroundColor: c.surfaceAlt, borderColor: c.border }]}>
-      <Pressable onPress={() => go(-1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={c.textMuted} /></Pressable>
+      <Pressable onPress={() => go(-1)} hitSlop={8} style={({ pressed }) => pressedStyle(pressed)}><Ionicons name="chevron-back" size={18} color={c.textMuted} /></Pressable>
       <Text style={[styles.label, { color: c.text }]}>{CONFIG.months[monthIdx]} {year}</Text>
-      <Pressable onPress={() => go(1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={c.textMuted} /></Pressable>
+      <Pressable onPress={() => go(1)} hitSlop={8} style={({ pressed }) => pressedStyle(pressed)}><Ionicons name="chevron-forward" size={18} color={c.textMuted} /></Pressable>
     </View>
   );
 }
@@ -25,9 +27,9 @@ export function YearSwitcher({ year, onChange }: { year: number; onChange: (year
   const c = useTheme();
   return (
     <View style={[styles.wrap, { backgroundColor: c.surfaceAlt, borderColor: c.border }]}>
-      <Pressable onPress={() => onChange(year - 1)} hitSlop={8}><Ionicons name="chevron-back" size={18} color={c.textMuted} /></Pressable>
+      <Pressable onPress={() => onChange(year - 1)} hitSlop={8} style={({ pressed }) => pressedStyle(pressed)}><Ionicons name="chevron-back" size={18} color={c.textMuted} /></Pressable>
       <Text style={[styles.label, { color: c.text }]}>{year}</Text>
-      <Pressable onPress={() => onChange(year + 1)} hitSlop={8}><Ionicons name="chevron-forward" size={18} color={c.textMuted} /></Pressable>
+      <Pressable onPress={() => onChange(year + 1)} hitSlop={8} style={({ pressed }) => pressedStyle(pressed)}><Ionicons name="chevron-forward" size={18} color={c.textMuted} /></Pressable>
     </View>
   );
 }

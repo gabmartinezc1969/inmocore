@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '@/src/components/AppText';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import { YearSwitcher } from '@/src/components/MonthSwitcher';
@@ -34,7 +36,8 @@ export default function AnualScreen() {
   const hasData = monthly.some((m) => m.ing > 0 || m.egr > 0);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Dashboard anual" />
       <YearSwitcher year={year} onChange={setYear} />
 
       <View style={styles.statsRow}>

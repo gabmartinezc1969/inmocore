@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
+import Text from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '@/src/components/Screen';
+import ScreenHeader from '@/src/components/ScreenHeader';
 import Card from '@/src/components/Card';
 import StatCard from '@/src/components/StatCard';
 import ProgressBar from '@/src/components/ProgressBar';
@@ -14,6 +16,7 @@ import { useTheme, useEnrichedLedger } from '@/src/store/hooks';
 import { useStore } from '@/src/store/useStore';
 import { amortizationStatus, creditRealPayments, totalDebt } from '@/src/utils/finance';
 import { fmtMoney } from '@/src/utils/format';
+import { pressedStyle } from '@/src/utils/press';
 import { Credito, TipoCredito } from '@/src/types/models';
 
 const TIPOS: TipoCredito[] = ['Hipotecario', 'Automotriz', 'Personal', 'Otro'];
@@ -44,7 +47,8 @@ export default function DeudasScreen() {
   const deudaTotal = totalDebt(credits);
 
   return (
-    <Screen edges={[]}>
+    <Screen edges={['top', 'bottom']}>
+      <ScreenHeader title="Créditos y deudas" />
       <View style={styles.statsRow}>
         <StatCard icon="card-outline" label="Deuda total" value={fmtMoney(deudaTotal)} tone="expense" />
         <StatCard icon="albums-outline" label="Créditos activos" value={String(credits.length)} />
@@ -62,9 +66,9 @@ export default function DeudasScreen() {
         const pagos = creditRealPayments(cr, ledger);
         return (
           <Card key={cr.id}>
-            <Pressable onPress={() => openEdit(cr)}>
+            <Pressable onPress={() => openEdit(cr)} style={({ pressed }) => pressedStyle(pressed)}>
               <View style={styles.rowBetween}>
-                <Text style={[styles.creditName, { color: c.text }]}>{cr.nombre}</Text>
+                <Text style={[styles.creditName, { color: c.text, flex: 1, marginRight: 8 }]} numberOfLines={1}>{cr.nombre}</Text>
                 <Ionicons name="create-outline" size={16} color={c.textFaint} />
               </View>
               <Text style={[styles.creditMeta, { color: c.textMuted }]}>{cr.tipo} · {cr.tasa}% anual · {cr.plazo} meses</Text>

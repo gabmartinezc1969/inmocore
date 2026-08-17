@@ -1,8 +1,14 @@
 import React from 'react';
-import { View, Text, TextInput, TextInputProps, StyleSheet, Switch } from 'react-native';
+import { View, TextInput, TextInputProps, StyleSheet, Switch, StyleProp, ViewStyle } from 'react-native';
+import Text from '@/src/components/AppText';
 import { useTheme } from '@/src/store/hooks';
 
-export function FormField({ label, style, ...rest }: { label: string } & TextInputProps) {
+// `style` here sizes the wrapping View (e.g. `style={{ flex: 1 }}` to sit
+// two fields side by side) — it was never forwarded to the inner
+// TextInput, so type it as ViewStyle instead of inheriting TextInputProps'
+// own (TextStyle-typed) `style`, which doesn't match how every call site
+// actually uses it.
+export function FormField({ label, style, ...rest }: { label: string; style?: StyleProp<ViewStyle> } & Omit<TextInputProps, 'style'>) {
   const c = useTheme();
   return (
     <View style={[styles.wrap, style]}>
