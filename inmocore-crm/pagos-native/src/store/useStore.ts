@@ -42,10 +42,6 @@ interface AppState {
   setPin: (pin: string | null) => void;
   dismissSubscription: (key: string) => void;
 
-  bulkRename: (filter: { year?: number; monthIdx?: number; categoria?: string; concepto?: string }, newCategoria: string | null, newConcepto: string | null) => number;
-  copyMonth: (opts: { tipo?: 'I' | 'E'; fromYear: number; fromMonth: number; toYear: number; toMonth: number; asPending: boolean }) => number;
-  deleteMonths: (opts: { tipo?: 'I' | 'E'; fromYear: number; fromMonth: number; mode: 'single' | 'onward' }) => number;
-
   resetToDemo: () => void;
   clearAll: () => void;
   importState: (data: Partial<Pick<AppState, 'ledger' | 'credits' | 'assets' | 'investments'>>) => void;
@@ -55,7 +51,7 @@ const defaultSettings: Settings = { theme: 'light', onboardingSeen: false, pin: 
 
 export const useStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ledger: buildDemoLedger(),
       credits: buildDemoCredits(),
       assets: buildDemoAssets(),
@@ -87,55 +83,6 @@ export const useStore = create<AppState>()(
       setOnboardingSeen: () => set((s) => ({ settings: { ...s.settings, onboardingSeen: true } })),
       setPin: (pin) => set((s) => ({ settings: { ...s.settings, pin } })),
       dismissSubscription: (key) => set((s) => ({ settings: { ...s.settings, dismissedSubs: [...s.settings.dismissedSubs, key] } })),
-
-      bulkRename: (filter, newCategoria, newConcepto) => {
-        let count = 0;
-        set((s) => ({
-          ledger: s.ledger.map((r) => {
-            const matches = (filter.year === undefined || new Date(r.fecha + 'T00:00:00').getFullYear() === filter.year) &&
-              (filter.monthIdx === undefined || new Date(r.fecha + 'T00:00:00').getMonth() === filter.monthIdx) &&
-              (!filter.categoria || r.categoria === filter.categoria) &&
-              (!filter.concepto || r.concepto === filter.concepto);
-            if (!matches) return r;
-            count += 1;
-            return { ...r, categoria: newCategoria || r.categoria, concepto: newConcepto || r.concepto };
-          }),
-        }));
-        return count;
-      },
-
-      copyMonth: ({ tipo, fromYear, fromMonth, toYear, toMonth, asPending }) => {
-        const s = get();
-        const src = s.ledger.filter((r) => {
-          const d = new Date(r.fecha + 'T00:00:00');
-          return d.getFullYear() === fromYear && d.getMonth() === fromMonth && (!tipo || r.tipo === tipo);
-        });
-        const copies: Movimiento[] = src.map((r) => {
-          const d = new Date(r.fecha + 'T00:00:00');
-          const targetDay = Math.min(d.getDate(), new Date(toYear, toMonth + 1, 0).getDate());
-          const mm = String(toMonth + 1).padStart(2, '0');
-          const dd = String(targetDay).padStart(2, '0');
-          return { ...r, id: uid(), fecha: `${toYear}-${mm}-${dd}`, monto: asPending ? null : r.monto };
-        });
-        set({ ledger: [...s.ledger, ...copies] });
-        return copies.length;
-      },
-
-      deleteMonths: ({ tipo, fromYear, fromMonth, mode }) => {
-        const s = get();
-        let count = 0;
-        const keep = s.ledger.filter((r) => {
-          const d = new Date(r.fecha + 'T00:00:00');
-          const y = d.getFullYear(), m = d.getMonth();
-          const inRange = mode === 'single' ? (y === fromYear && m === fromMonth) : (y > fromYear || (y === fromYear && m >= fromMonth));
-          const typeMatch = !tipo || r.tipo === tipo;
-          const shouldDelete = inRange && typeMatch;
-          if (shouldDelete) count += 1;
-          return !shouldDelete;
-        });
-        set({ ledger: keep });
-        return count;
-      },
 
       resetToDemo: () => set({
         ledger: buildDemoLedger(),

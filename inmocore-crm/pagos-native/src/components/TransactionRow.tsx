@@ -34,6 +34,29 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
   const color = catColor(item.categoria);
   const isIncome = item.tipo === 'I';
   const pending = item.monto === null;
+  // A gasto only counts as settled ("Pagado") when what was actually paid
+  // matches the expense's own amount exactly — a real payment that doesn't
+  // match still shows as an outstanding expense (red/negative), not paid.
+  const paidExpense = !isIncome && !pending && item.monto === item.presupuesto;
+  const positive = isIncome || paidExpense;
+  // A pending gasto still has a known amount (presupuesto) — show that
+  // figure in red instead of just the word "Pendiente". Pending income
+  // keeps the plain "Pendiente" label (there's no "owed" amount to redden).
+  const pendingGasto = !isIncome && pending;
+
+  let amountColor: string;
+  let amountText: string;
+  if (pendingGasto) {
+    amountColor = c.expense;
+    amountText = `− ${fmtMoney(Math.abs(item.presupuesto || 0))}`;
+  } else if (pending) {
+    amountColor = c.textFaint;
+    amountText = 'Pendiente';
+  } else {
+    amountColor = positive ? c.income : c.expense;
+    amountText = `${positive ? '+' : '−'} ${fmtMoney(Math.abs(item.monto || 0))}`;
+  }
+
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={[styles.iconWrap, { backgroundColor: color + '22' }]}>
@@ -41,11 +64,12 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
       </View>
       <View style={{ flex: 1 }}>
         <Text style={[styles.concepto, { color: c.text }]} numberOfLines={1}>{item.concepto}</Text>
-        <Text style={[styles.meta, { color: c.textFaint }]} numberOfLines={1}>{item.categoria} · {fmtDateShort(item.fecha)}</Text>
+        <Text style={[styles.meta, { color: c.textFaint }]} numberOfLines={1}>
+          {item.categoria} · {fmtDateShort(item.fecha)}
+          {paidExpense ? <Text style={{ color: c.income, fontWeight: '800' }}> · ✓ Pagado</Text> : null}
+        </Text>
       </View>
-      <Text style={[styles.amount, { color: pending ? c.textFaint : isIncome ? c.income : c.expense }]}>
-        {pending ? 'Pendiente' : `${isIncome ? '+' : '−'} ${fmtMoney(Math.abs(item.monto || 0))}`}
-      </Text>
+      <Text style={[styles.amount, { color: amountColor }]}>{amountText}</Text>
     </Pressable>
   );
 }
