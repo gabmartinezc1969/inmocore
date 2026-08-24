@@ -113,17 +113,6 @@ export default function MovimientosScreen() {
         <Dropdown label="Mes" value={monthIdx} options={monthOptions} onChange={setMonthIdx} />
       </View>
 
-      <View style={styles.statsRow}>
-        <StatCard icon="trending-up" label="Ingresos" value={fmtMoney(totalIngresos)} tone="income" />
-        <StatCard icon="trending-down" label="Gastos" value={fmtMoney(totalGastos)} tone="expense" />
-        <StatCard
-          icon="wallet"
-          label="Remanente"
-          value={fmtMoney(remanente)}
-          tone={remanente >= 0 ? 'income' : 'expense'}
-        />
-      </View>
-
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -133,6 +122,18 @@ export default function MovimientosScreen() {
         renderItem={({ item }) => <TransactionRow item={item} onPress={() => openEdit(item)} />}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={<EmptyState title="Sin movimientos" subtitle="Ajusta los filtros o agrega uno nuevo" />}
+        ListFooterComponent={sections.length ? (
+          <View style={styles.statsRow}>
+            <StatCard icon="trending-up" label="Ingresos" value={fmtMoney(totalIngresos)} tone="income" />
+            <StatCard icon="trending-down" label="Gastos" value={fmtMoney(totalGastos)} tone="expense" />
+            <StatCard
+              icon="wallet"
+              label="Remanente"
+              value={fmtMoney(remanente)}
+              tone={remanente >= 0 ? 'income' : 'expense'}
+            />
+          </View>
+        ) : null}
         stickySectionHeadersEnabled
       />
 
@@ -157,7 +158,9 @@ const styles = StyleSheet.create({
   searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 },
   searchInput: { flex: 1, fontSize: 14 },
   dropdownRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginTop: 12 },
-  statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginTop: 14 },
+  // Rendered as the SectionList's footer, which already sits inside
+  // listContent's paddingHorizontal — no horizontal padding needed here.
+  statsRow: { flexDirection: 'row', gap: 10, marginTop: 18 },
   sectionHeader: { fontSize: 12.5, fontWeight: '800', textTransform: 'capitalize', paddingTop: 14, paddingBottom: 6 },
   listContent: { paddingHorizontal: 20, paddingBottom: 40 },
 });
