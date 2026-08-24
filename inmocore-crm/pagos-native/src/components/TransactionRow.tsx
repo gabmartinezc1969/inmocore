@@ -34,10 +34,11 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
   const color = catColor(item.categoria);
   const isIncome = item.tipo === 'I';
   const pending = item.monto === null;
-  // Once a real amount is entered, the expense is settled ("Pagado") — show
-  // it in green and positive like an income, instead of staying red/negative
-  // forever. Income keeps its usual green treatment either way.
-  const paid = !pending;
+  // A gasto only counts as settled ("Pagado") when what was actually paid
+  // matches the expense's own amount exactly — a real payment that doesn't
+  // match still shows as an outstanding expense (red/negative), not paid.
+  const paidExpense = !isIncome && !pending && item.monto === item.presupuesto;
+  const positive = isIncome || paidExpense;
 
   return (
     <Pressable onPress={onPress} style={styles.row}>
@@ -48,11 +49,11 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
         <Text style={[styles.concepto, { color: c.text }]} numberOfLines={1}>{item.concepto}</Text>
         <Text style={[styles.meta, { color: c.textFaint }]} numberOfLines={1}>
           {item.categoria} · {fmtDateShort(item.fecha)}
-          {!isIncome && paid ? <Text style={{ color: c.income, fontWeight: '800' }}> · ✓ Pagado</Text> : null}
+          {paidExpense ? <Text style={{ color: c.income, fontWeight: '800' }}> · ✓ Pagado</Text> : null}
         </Text>
       </View>
-      <Text style={[styles.amount, { color: pending ? c.textFaint : c.income }]}>
-        {pending ? 'Pendiente' : `+ ${fmtMoney(Math.abs(item.monto || 0))}`}
+      <Text style={[styles.amount, { color: pending ? c.textFaint : positive ? c.income : c.expense }]}>
+        {pending ? 'Pendiente' : `${positive ? '+' : '−'} ${fmtMoney(Math.abs(item.monto || 0))}`}
       </Text>
     </Pressable>
   );
