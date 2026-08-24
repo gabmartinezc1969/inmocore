@@ -32,7 +32,7 @@ function PinGate() {
         <FormField
           label="" value={value} onChangeText={(v) => { setValue(v.replace(/\D/g, '').slice(0, 4)); setError(''); }}
           keyboardType="number-pad" secureTextEntry maxLength={4} placeholder="••••"
-          style={{ textAlign: 'center' } as any}
+          inputStyle={{ textAlign: 'center' }}
         />
       </View>
       {error ? <Text style={{ color: c.expense, fontSize: 12.5, marginTop: 8, fontWeight: '700' }}>{error}</Text> : null}

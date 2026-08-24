@@ -1,15 +1,23 @@
 import React from 'react';
-import { View, Text, TextInput, TextInputProps, StyleSheet, Switch } from 'react-native';
+import { View, Text, TextInput, TextInputProps, StyleSheet, Switch, ViewStyle } from 'react-native';
 import { useTheme } from '@/src/store/hooks';
 
-export function FormField({ label, style, ...rest }: { label: string } & TextInputProps) {
+// `style` sizes/positions the field as a whole (e.g. `{ flex: 1 }` to share a
+// row) and lands on the wrapping View — that's what every existing caller
+// actually wants. `inputStyle` is for styling the TextInput itself (e.g.
+// `{ textAlign: 'center' }` for a PIN field); it used to be conflated with
+// `style`, which both mistyped against the View and silently no-opped since
+// a View has no text to align.
+export function FormField({
+  label, style, inputStyle, ...rest
+}: { label: string; style?: ViewStyle; inputStyle?: TextInputProps['style'] } & Omit<TextInputProps, 'style'>) {
   const c = useTheme();
   return (
     <View style={[styles.wrap, style]}>
       <Text style={[styles.label, { color: c.textMuted }]}>{label}</Text>
       <TextInput
         placeholderTextColor={c.textFaint}
-        style={[styles.input, { color: c.text, backgroundColor: c.surfaceAlt, borderColor: c.border }]}
+        style={[styles.input, { color: c.text, backgroundColor: c.surfaceAlt, borderColor: c.border }, inputStyle]}
         {...rest}
       />
     </View>
