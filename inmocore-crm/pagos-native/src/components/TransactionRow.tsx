@@ -39,6 +39,23 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
   // match still shows as an outstanding expense (red/negative), not paid.
   const paidExpense = !isIncome && !pending && item.monto === item.presupuesto;
   const positive = isIncome || paidExpense;
+  // A pending gasto still has a known amount (presupuesto) — show that
+  // figure in red instead of just the word "Pendiente". Pending income
+  // keeps the plain "Pendiente" label (there's no "owed" amount to redden).
+  const pendingGasto = !isIncome && pending;
+
+  let amountColor: string;
+  let amountText: string;
+  if (pendingGasto) {
+    amountColor = c.expense;
+    amountText = `− ${fmtMoney(Math.abs(item.presupuesto || 0))}`;
+  } else if (pending) {
+    amountColor = c.textFaint;
+    amountText = 'Pendiente';
+  } else {
+    amountColor = positive ? c.income : c.expense;
+    amountText = `${positive ? '+' : '−'} ${fmtMoney(Math.abs(item.monto || 0))}`;
+  }
 
   return (
     <Pressable onPress={onPress} style={styles.row}>
@@ -52,9 +69,7 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
           {paidExpense ? <Text style={{ color: c.income, fontWeight: '800' }}> · ✓ Pagado</Text> : null}
         </Text>
       </View>
-      <Text style={[styles.amount, { color: pending ? c.textFaint : positive ? c.income : c.expense }]}>
-        {pending ? 'Pendiente' : `${positive ? '+' : '−'} ${fmtMoney(Math.abs(item.monto || 0))}`}
-      </Text>
+      <Text style={[styles.amount, { color: amountColor }]}>{amountText}</Text>
     </Pressable>
   );
 }
