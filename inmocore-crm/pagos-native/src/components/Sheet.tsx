@@ -8,7 +8,11 @@ export default function Sheet({ visible, onClose, title, children }: PropsWithCh
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap}>
+      {/* On Android `behavior: undefined` makes KeyboardAvoidingView a no-op,
+          so the keyboard was free to cover fields like "Real" (the paid
+          amount) near the top of this sheet — 'height' is the standard fix
+          for a KeyboardAvoidingView living inside a Modal on Android. */}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.sheetWrap}>
         <View style={[styles.sheet, { backgroundColor: c.surface }]}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: c.text }]}>{title}</Text>

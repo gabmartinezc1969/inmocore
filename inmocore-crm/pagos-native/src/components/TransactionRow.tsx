@@ -34,6 +34,11 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
   const color = catColor(item.categoria);
   const isIncome = item.tipo === 'I';
   const pending = item.monto === null;
+  // Once a real amount is entered, the expense is settled ("Pagado") — show
+  // it in green and positive like an income, instead of staying red/negative
+  // forever. Income keeps its usual green treatment either way.
+  const paid = !pending;
+
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={[styles.iconWrap, { backgroundColor: color + '22' }]}>
@@ -41,10 +46,13 @@ export default function TransactionRow({ item, onPress }: { item: Movimiento; on
       </View>
       <View style={{ flex: 1 }}>
         <Text style={[styles.concepto, { color: c.text }]} numberOfLines={1}>{item.concepto}</Text>
-        <Text style={[styles.meta, { color: c.textFaint }]} numberOfLines={1}>{item.categoria} · {fmtDateShort(item.fecha)}</Text>
+        <Text style={[styles.meta, { color: c.textFaint }]} numberOfLines={1}>
+          {item.categoria} · {fmtDateShort(item.fecha)}
+          {!isIncome && paid ? <Text style={{ color: c.income, fontWeight: '800' }}> · ✓ Pagado</Text> : null}
+        </Text>
       </View>
-      <Text style={[styles.amount, { color: pending ? c.textFaint : isIncome ? c.income : c.expense }]}>
-        {pending ? 'Pendiente' : `${isIncome ? '+' : '−'} ${fmtMoney(Math.abs(item.monto || 0))}`}
+      <Text style={[styles.amount, { color: pending ? c.textFaint : c.income }]}>
+        {pending ? 'Pendiente' : `+ ${fmtMoney(Math.abs(item.monto || 0))}`}
       </Text>
     </Pressable>
   );

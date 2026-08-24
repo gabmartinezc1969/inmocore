@@ -1,17 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, SectionList, TextInput, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, SectionList, TextInput, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Chip from '@/src/components/Chip';
 import SegmentedControl from '@/src/components/SegmentedControl';
 import TransactionRow from '@/src/components/TransactionRow';
 import EmptyState from '@/src/components/EmptyState';
+import StatCard from '@/src/components/StatCard';
+import Dropdown from '@/src/components/Dropdown';
 import MovimientoForm, { emptyDraft, draftFromMovimiento, draftToMovimiento, MovimientoDraft } from '@/src/components/MovimientoForm';
 import { useTheme } from '@/src/store/hooks';
 import { useStore } from '@/src/store/useStore';
 import { useEnrichedLedger } from '@/src/store/hooks';
-import { allYears } from '@/src/utils/finance';
+import { allYears, realSum } from '@/src/utils/finance';
 import { CONFIG } from '@/src/config/config';
+import { fmtMoney } from '@/src/utils/format';
 import { Movimiento } from '@/src/types/models';
 
 export default function MovimientosScreen() {
@@ -23,23 +25,42 @@ export default function MovimientosScreen() {
 
   const [tipo, setTipo] = useState<'ALL' | 'I' | 'E'>('ALL');
   const [year, setYear] = useState<number | null>(null);
+  const [monthIdx, setMonthIdx] = useState<number | null>(null);
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Movimiento | null>(null);
 
   const years = useMemo(() => allYears(ledger), [ledger]);
+  const yearOptions = useMemo(
+    () => [{ label: 'Todos los años', value: null as number | null }, ...years.map((y) => ({ label: String(y), value: y }))],
+    [years],
+  );
+  const monthOptions = useMemo(
+    () => [{ label: 'Todos los meses', value: null as number | null }, ...CONFIG.months.map((m, i) => ({ label: m, value: i }))],
+    [],
+  );
+
+  // The period picked via the Año / Mes dropdowns — used both to filter the
+  // list and to total up the "mes consultado" regardless of the Tipo segment
+  // or search text, so the summary always reflects the full month.
+  const periodRows = useMemo(
+    () => ledger.filter((r) => (year === null || r.year === year) && (monthIdx === null || r.monthIdx === monthIdx)),
+    [ledger, year, monthIdx],
+  );
+  const totalIngresos = useMemo(() => realSum(periodRows.filter((r) => r.tipo === 'I')), [periodRows]);
+  const totalGastos = useMemo(() => realSum(periodRows.filter((r) => r.tipo === 'E')), [periodRows]);
+  const remanente = totalIngresos - totalGastos;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return ledger.filter((r) =>
+    return periodRows.filter((r) =>
       (tipo === 'ALL' || r.tipo === tipo) &&
-      (year === null || r.year === year) &&
       (!q || r.concepto.toLowerCase().includes(q) || r.categoria.toLowerCase().includes(q)));
-  }, [ledger, tipo, year, search]);
+  }, [periodRows, tipo, search]);
 
   const sections = useMemo(() => {
     const groups: Record<string, Movimiento[]> = {};
-    [...filtered].sort((a, b) => b.fecha.localeCompare(a.fecha)).forEach((r) => {
+    [...filtered].sort((a, b) => a.fecha.localeCompare(b.fecha)).forEach((r) => {
       const key = `${CONFIG.months[r.monthIdx]} ${r.year}`;
       (groups[key] = groups[key] || []).push(r);
     });
@@ -87,10 +108,21 @@ export default function MovimientosScreen() {
         options={[{ label: 'Todos', value: 'ALL' }, { label: 'Ingresos', value: 'I' }, { label: 'Gastos', value: 'E' }]}
       />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yearsRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
-        <Chip label="Todos los años" active={year === null} onPress={() => setYear(null)} />
-        {years.map((y) => <Chip key={y} label={String(y)} active={year === y} onPress={() => setYear(y)} />)}
-      </ScrollView>
+      <View style={styles.dropdownRow}>
+        <Dropdown label="Año" value={year} options={yearOptions} onChange={setYear} />
+        <Dropdown label="Mes" value={monthIdx} options={monthOptions} onChange={setMonthIdx} />
+      </View>
+
+      <View style={styles.statsRow}>
+        <StatCard icon="trending-up" label="Ingresos" value={fmtMoney(totalIngresos)} tone="income" />
+        <StatCard icon="trending-down" label="Gastos" value={fmtMoney(totalGastos)} tone="expense" />
+        <StatCard
+          icon="wallet"
+          label="Remanente"
+          value={fmtMoney(remanente)}
+          tone={remanente >= 0 ? 'income' : 'expense'}
+        />
+      </View>
 
       <SectionList
         sections={sections}
@@ -124,7 +156,8 @@ const styles = StyleSheet.create({
   searchWrap: { paddingHorizontal: 20, marginBottom: 12 },
   searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 },
   searchInput: { flex: 1, fontSize: 14 },
-  yearsRow: { marginTop: 12, marginBottom: 4, flexGrow: 0 },
+  dropdownRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginTop: 12 },
+  statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginTop: 14 },
   sectionHeader: { fontSize: 12.5, fontWeight: '800', textTransform: 'capitalize', paddingTop: 14, paddingBottom: 6 },
   listContent: { paddingHorizontal: 20, paddingBottom: 40 },
 });
