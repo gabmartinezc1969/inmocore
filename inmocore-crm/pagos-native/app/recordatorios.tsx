@@ -19,6 +19,49 @@ function estadoOf(diffDays: number): { label: string; tone: 'expense' | 'warning
   return { label: 'Programado', tone: 'neutral' };
 }
 
+// Defined at module scope (not inside RecordatoriosScreen) so it keeps a
+// stable component identity across renders. A component re-declared inside
+// a parent's render body gets a brand-new type on every render, which makes
+// React unmount + remount the whole subtree whenever the parent re-renders —
+// if that happens mid-gesture (very easy to hit, since selecting a row is
+// itself a re-render-triggering state change) the touch responder can lose
+// the press before onPress ever fires, which is why the rows read as
+// "not tappable".
+function ReminderGroup({
+  title, items, tone, onSelect,
+}: {
+  title: string;
+  items: PendingItem[];
+  tone: 'expense' | 'warning' | 'neutral';
+  onSelect: (p: PendingItem) => void;
+}) {
+  const c = useTheme();
+  if (!items.length) return null;
+  return (
+    <Card>
+      <View style={styles.rowBetween}>
+        <Text style={[styles.title, { color: c.text }]}>{title}</Text>
+        <Badge text={String(items.length)} tone={tone} />
+      </View>
+      {items.map((p) => (
+        <Pressable
+          key={p.id}
+          onPress={() => onSelect(p)}
+          style={({ pressed }) => [styles.row, pressed && { opacity: 0.6 }]}
+          hitSlop={4}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>{p.concepto}</Text>
+            <Text style={[styles.meta, { color: c.textFaint }]}>{p.categoria} · {fmtDateShort(p.fecha)}</Text>
+          </View>
+          <Text style={[styles.amount, { color: c.expense }]}>{fmtMoney(p.presupuesto)}</Text>
+          <Ionicons name="chevron-forward" size={16} color={c.textFaint} style={{ marginLeft: 6 }} />
+        </Pressable>
+      ))}
+    </Card>
+  );
+}
+
 export default function RecordatoriosScreen() {
   const c = useTheme();
   const ledger = useEnrichedLedger();
@@ -47,32 +90,13 @@ export default function RecordatoriosScreen() {
     setSelected(null);
   };
 
-  const Group = ({ title, items, tone }: { title: string; items: PendingItem[]; tone: 'expense' | 'warning' | 'neutral' }) => items.length ? (
-    <Card>
-      <View style={styles.rowBetween}>
-        <Text style={[styles.title, { color: c.text }]}>{title}</Text>
-        <Badge text={String(items.length)} tone={tone} />
-      </View>
-      {items.map((p) => (
-        <Pressable key={p.id} onPress={() => setSelected(p)} style={styles.row}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>{p.concepto}</Text>
-            <Text style={[styles.meta, { color: c.textFaint }]}>{p.categoria} · {fmtDateShort(p.fecha)}</Text>
-          </View>
-          <Text style={[styles.amount, { color: c.expense }]}>{fmtMoney(p.presupuesto)}</Text>
-          <Ionicons name="chevron-forward" size={16} color={c.textFaint} style={{ marginLeft: 6 }} />
-        </Pressable>
-      ))}
-    </Card>
-  ) : null;
-
   const selectedEstado = selected ? estadoOf(selected.diffDays) : null;
 
   return (
     <Screen edges={[]}>
-      <Group title="Vencidos" items={vencidos} tone="expense" />
-      <Group title="Próximos 7 días" items={proximos} tone="warning" />
-      <Group title="Programados" items={futuros} tone="neutral" />
+      <ReminderGroup title="Vencidos" items={vencidos} tone="expense" onSelect={setSelected} />
+      <ReminderGroup title="Próximos 7 días" items={proximos} tone="warning" onSelect={setSelected} />
+      <ReminderGroup title="Programados" items={futuros} tone="neutral" onSelect={setSelected} />
       {!pending.length && <EmptyState icon="notifications-outline" title="Sin pagos pendientes" subtitle="Los movimientos con presupuesto y sin monto real aparecen aquí" />}
 
       <Sheet visible={!!selected} onClose={() => setSelected(null)} title={selected?.concepto ?? 'Recordatorio'}>
