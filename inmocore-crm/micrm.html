@@ -373,7 +373,7 @@ function nowIso(){ return new Date().toISOString(); }
 
 const DEFAULT_SETTINGS = {
   businessName:'Mi Negocio', logo:null, taxId:'', currency:'MXN', ivaRate:16, theme:'light',
-  pinHash:null, invoiceCounter:1, webauthnCredId:null, backupFileName:null
+  pinHash:null, adminName:'Administrador', invoiceCounter:1, webauthnCredId:null, backupFileName:null
 };
 
 const state = {
@@ -735,8 +735,16 @@ let pinBuffer = '';
 // advisor id when that advisor unlocked the app with her own PIN — this is a
 // client-side-only, soft restriction (no backend), not real security.
 let activeAdvisorId = null;
+// True once someone actually unlocked with the master (admin) PIN this session —
+// distinguishes "logged in as admin" from "no lock configured at all" for the header label.
+let adminSessionActive = false;
 function isAdmin(){ return !activeAdvisorId; }
 function currentAdvisor(){ return activeAdvisorId ? findAdvisor(activeAdvisorId) : null; }
+function sessionLabel(){
+  if(activeAdvisorId) return currentAdvisor() ? currentAdvisor().name : null;
+  if(adminSessionActive) return state.settings.adminName || 'Administrador';
+  return null;
+}
 function canEditContact(c){ return isAdmin() || (c && c.advisorId === activeAdvisorId); }
 function canEditProperty(p){ return isAdmin() || (p && state.contacts.some(c=>c.propertyId===p.id && c.advisorId===activeAdvisorId)); }
 function canEditAdvisorProfile(a){ return isAdmin() || (a && a.id === activeAdvisorId); }
@@ -761,12 +769,15 @@ async function checkPin(){
   const hash = await sha256(pinBuffer);
   if(state.settings.pinHash && hash === state.settings.pinHash){
     activeAdvisorId = null;
+    adminSessionActive = true;
     unlockApp();
+    toast('Sesión de ' + (state.settings.adminName || 'Administrador'));
     return;
   }
   const matchedAdvisor = state.advisors.find(a=>a.pinHash && a.pinHash === hash);
   if(matchedAdvisor){
     activeAdvisorId = matchedAdvisor.id;
+    adminSessionActive = false;
     unlockApp();
     toast('Sesión de ' + matchedAdvisor.name);
     return;
@@ -830,7 +841,7 @@ function renderHeader(){
       </div>
       <div class="chips-row" id="stage-filter-row"></div>`;
   }
-  const subLabel = currentAdvisor() ? `${escapeHtml(state.settings.businessName)} · ${escapeHtml(currentAdvisor().name)}` : escapeHtml(state.settings.businessName);
+  const subLabel = sessionLabel() ? `${escapeHtml(state.settings.businessName)} · ${escapeHtml(sessionLabel())}` : escapeHtml(state.settings.businessName);
   hd.innerHTML = `<div class="hd-row"><div><h1>${titles[currentView]||'MiCRM'}</h1><div class="sub">${subLabel}</div></div>
     <button class="icon-btn" id="btn-lock-now" title="Bloquear">${ICO.lock}</button></div>${extra}`;
   document.getElementById('btn-lock-now').addEventListener('click', ()=>{ if(isLockEnabled()) showLockScreen(); else toast('No has configurado un PIN'); });
@@ -2177,9 +2188,19 @@ function renderSettingsView(){
     </div>` : ''}
     <div class="card">
       <div class="settings-item"><div><div class="label-txt">Tema oscuro</div></div><div class="switch ${s.theme==='dark'?'on':''}" id="theme-switch"><div class="knob"></div></div></div>
-      ${admin ? `<div class="settings-item"><div><div class="label-txt">Bloqueo por PIN</div><div class="desc-txt">${s.pinHash?'Activado':'Desactivado'}</div></div><button class="btn btn-outline btn-sm" id="pin-btn">${s.pinHash?'Cambiar':'Configurar'}</button></div>
-      <div class="settings-item"><div><div class="label-txt">Archivo de respaldo</div><div class="desc-txt">${s.backupFileName?('Vinculado: '+escapeHtml(s.backupFileName)):'No vinculado'}</div></div><button class="btn btn-outline btn-sm" id="link-backup-btn">Vincular</button></div>` : ''}
+      ${admin ? `<div class="settings-item"><div><div class="label-txt">Archivo de respaldo</div><div class="desc-txt">${s.backupFileName?('Vinculado: '+escapeHtml(s.backupFileName)):'No vinculado'}</div></div><button class="btn btn-outline btn-sm" id="link-backup-btn">Vincular</button></div>` : ''}
     </div>
+    ${admin ? `<div class="card"><h3>Cuenta de administrador</h3>
+      <div style="font-size:12.5px; color:var(--muted); margin-bottom:8px;">El administrador tiene acceso completo: ve y edita todos los contactos, propiedades, asesoras y ajustes del negocio.</div>
+      <label>Nombre del administrador</label><input id="set-adminname" value="${escapeHtml(s.adminName||'Administrador')}">
+      <button class="btn btn-outline btn-block" id="save-adminname" style="margin-top:8px;">Guardar nombre</button>
+      <div class="settings-item"><div><div class="label-txt">PIN de administrador</div><div class="desc-txt">${s.pinHash?'Activado':'Desactivado'}</div></div><button class="btn btn-outline btn-sm" id="pin-btn">${s.pinHash?'Cambiar':'Configurar'}</button></div>
+    </div>
+    <div class="card"><h3>Usuarios y accesos (Asesoras)</h3>
+      <div style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">Da de alta asesoras y asígnales un PIN de entrada propio. Con su PIN, cada asesora solo puede editar los contactos y propiedades que tiene asignados — el resto lo ve en modo lectura.</div>
+      <div id="settings-advisors-list"></div>
+      <div class="link-add" id="settings-add-advisor">${ICO.plus} Nueva asesora</div>
+    </div>` : ''}
     <div class="card"><h3>Datos</h3>
       <button class="btn btn-outline btn-block" id="export-json">Exportar todo (JSON)</button>
       ${admin ? `<input type="file" id="import-json-input" accept="application/json" class="hidden">
@@ -2200,6 +2221,12 @@ function renderSettingsView(){
     });
     document.getElementById('pin-btn').addEventListener('click', openPinSetup);
     document.getElementById('link-backup-btn').addEventListener('click', linkBackupFile);
+    document.getElementById('save-adminname').addEventListener('click', ()=>{
+      s.adminName = document.getElementById('set-adminname').value.trim() || 'Administrador';
+      persist('settings'); toast('Nombre de administrador guardado'); render();
+    });
+    renderSettingsAdvisorsList();
+    document.getElementById('settings-add-advisor').addEventListener('click', ()=>openAdvisorForm());
     document.getElementById('import-json').addEventListener('click', ()=> document.getElementById('import-json-input').click());
     document.getElementById('import-json-input').addEventListener('change', (e)=>{
       const file = e.target.files[0]; if(!file) return;
@@ -2225,6 +2252,20 @@ function renderSettingsView(){
   document.getElementById('export-json').addEventListener('click', ()=> downloadFile('micrm_datos.json', JSON.stringify(exportAllData(), null, 2), 'application/json'));
   document.getElementById('export-xlsx').addEventListener('click', exportAllDataXLSX);
   document.getElementById('export-contacts-csv').addEventListener('click', exportContactsCSV);
+}
+function renderSettingsAdvisorsList(){
+  const el = document.getElementById('settings-advisors-list');
+  if(!el) return;
+  const advisors = state.advisors.slice().sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  el.innerHTML = advisors.length ? advisors.map(a=>`
+    <div class="advisor-row" data-id="${a.id}">
+      <div class="avatar" style="background:${a.color}">${initials(a.name)}</div>
+      <div class="contact-main">
+        <div class="cname">${escapeHtml(a.name)} ${a.active===false?'<span class="chip-outline chip">Inactiva</span>':''}</div>
+        <div class="csub">${a.pinHash?'PIN configurado':'Sin PIN — no puede iniciar sesión propia'}</div>
+      </div>
+    </div>`).join('') : '<div class="empty-state">Sin asesoras registradas.</div>';
+  el.querySelectorAll('.advisor-row').forEach(row=> row.addEventListener('click', ()=>openAdvisorForm(row.dataset.id)));
 }
 function fileToDataUrl(file){ return new Promise((res)=>{ const r = new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); }); }
 function openPinSetup(){
@@ -2310,7 +2351,8 @@ window.__MICRM_TEST__ = {
   sha256, checkPin, showLockScreen,
   getActiveAdvisorId: () => activeAdvisorId,
   setActiveAdvisorId: (id) => { activeAdvisorId = id; },
-  setPinBuffer: (v) => { pinBuffer = v; }
+  setPinBuffer: (v) => { pinBuffer = v; },
+  sessionLabel, isAdminSessionActive: () => adminSessionActive
 };
 
 })();
